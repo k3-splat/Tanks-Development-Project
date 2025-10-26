@@ -1,3 +1,4 @@
+using System;  
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -6,6 +7,7 @@ using UnityEngine.Serialization;
 
 namespace Tanks.Complete
 {
+
     public class GameManager : MonoBehaviour
     {
         // Which state the game is currently in
@@ -13,6 +15,13 @@ namespace Tanks.Complete
         {
             MainMenu,
             Game
+        }
+
+        public enum GameLoopState
+        {
+            RoundStarting,
+            RoundPlaying,
+            RoundEnding
         }
 
         // Data about the selected tanks passed from the menu to the GameManager
@@ -49,6 +58,10 @@ namespace Tanks.Complete
         private PlayerData[] m_TankData;            // Data passed from the menu about each selected tank (at least 2, max 4)
         private int m_PlayerCount = 0;              // The number of players (2 to 4), decided from the number of PlayerData passed by the menu
         private TextMeshProUGUI m_TitleText;        // The text used to display game message. Automatically found as part of the Menu prefab
+
+        private GameLoopState m_CurrentGameState;
+
+        public event Action<GameLoopState> OnGameStateChanged;
 
         private void Start()
         {
@@ -97,6 +110,15 @@ namespace Tanks.Complete
                 case GameState.Game:
                     GameStart();
                     break;
+            }
+        }
+
+        void SetGameState(GameLoopState newState)
+        {
+            if(m_CurrentGameState != newState)
+            {
+                m_CurrentGameState = newState;
+                OnGameStateChanged?.Invoke(newState);
             }
         }
 
@@ -189,6 +211,7 @@ namespace Tanks.Complete
 
         private IEnumerator RoundStarting ()
         {
+            SetGameState(GameLoopState.RoundStarting);
             // As soon as the round starts reset the tanks and make sure they can't move.
             ResetAllTanks ();
             DisableTankControl ();
@@ -207,6 +230,7 @@ namespace Tanks.Complete
 
         private IEnumerator RoundPlaying ()
         {
+            SetGameState(GameLoopState.RoundPlaying);
             // As soon as the round begins playing let the players control the tanks.
             EnableTankControl ();
 
@@ -224,6 +248,7 @@ namespace Tanks.Complete
 
         private IEnumerator RoundEnding ()
         {
+            SetGameState(GameLoopState.RoundEnding);
             // Stop tanks from moving.
             DisableTankControl ();
 
@@ -355,4 +380,5 @@ namespace Tanks.Complete
             }
         }
     }
+    
 }
