@@ -21,7 +21,7 @@ public class StartButton : MonoBehaviour
 
     void OnClicked()
     {
-        startButton.interactable = false; // 多重押し防止（任意）
+        startButton.interactable = false;
         SceneManager.LoadScene(homeSceneName);
     }
 }
