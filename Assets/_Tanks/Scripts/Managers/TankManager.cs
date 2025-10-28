@@ -35,6 +35,9 @@ namespace Tanks.Complete
         private TankAI m_AI;                                    // The Tank AI script that let a tank be a bot controlled by the computer
         private InputUser m_InputUser;                          // The Input user link to that tank. Input user identify a single player in the Input system
         
+
+        public event Action<int, int> OnWeaponStockChanged;
+        
         public void Setup (GameManager manager)
         {
             // Get references to the components.
@@ -84,9 +87,14 @@ namespace Tanks.Complete
                     }
                 }
             }
+
+            m_Shooting.OnShellStockChanged += HandleShellStockChanged;
         }
 
-
+        private void HandleShellStockChanged(int currentShells)
+        {
+            OnWeaponStockChanged?.Invoke(ControlIndex, currentShells);
+        }
         // Used during the phases of the game where the player shouldn't be able to control their tank.
         public void DisableControl ()
         {
