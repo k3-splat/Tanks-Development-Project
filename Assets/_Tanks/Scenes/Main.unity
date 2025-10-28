@@ -997,8 +997,8 @@ MonoBehaviour:
   m_ScreenEdgeBuffer: 4
   m_MinSize: 6.5
   m_Targets:
-  - {fileID: 1797345428}
-  - {fileID: 1003512746}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!4 &981608762
 Transform:
   m_ObjectHideFlags: 0
@@ -1685,10 +1685,10 @@ MonoBehaviour:
   m_StartDelay: 3
   m_EndDelay: 3
   m_CameraControl: {fileID: 981608761}
-  m_Tank1Prefab: {fileID: 3730018901609037779, guid: 7367b7fdcf599b84cbab81fe855932de, type: 3}
-  m_Tank2Prefab: {fileID: 3730018901609037779, guid: 7367b7fdcf599b84cbab81fe855932de, type: 3}
-  m_Tank3Prefab: {fileID: 6023372125893918746, guid: 9852370f86a74ab4e9e7305e433be8c6, type: 3}
-  m_Tank4Prefab: {fileID: 6023372125893918746, guid: 9852370f86a74ab4e9e7305e433be8c6, type: 3}
+  m_Tank1Prefab: {fileID: 128371297461601684, guid: 4ed198a5253233e4e9007ee3485b945a, type: 3}
+  m_Tank2Prefab: {fileID: 128371297461601684, guid: 4ed198a5253233e4e9007ee3485b945a, type: 3}
+  m_Tank3Prefab: {fileID: 6607345697276154869, guid: 9852370f86a74ab4e9e7305e433be8c6, type: 3}
+  m_Tank4Prefab: {fileID: 6607345697276154869, guid: 9852370f86a74ab4e9e7305e433be8c6, type: 3}
   m_SpawnPoints:
   - m_PlayerColor: {r: 0, g: 0, b: 0, a: 0}
     m_SpawnPoint: {fileID: 1458135184}
@@ -2529,8 +2529,6 @@ SceneRoots:
   - {fileID: 981608762}
   - {fileID: 459043177}
   - {fileID: 1600570520}
-  - {fileID: 6192791587136696294}
-  - {fileID: 884462088511292266}
   - {fileID: 160827390}
   - {fileID: 1179458661}
   - {fileID: 1530782356}
