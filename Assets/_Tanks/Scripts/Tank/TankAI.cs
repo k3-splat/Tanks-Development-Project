@@ -280,7 +280,7 @@ namespace Tanks.Complete
 
                             // if our cooldown is not 0 or below, we have to wait for it to be before shooting. If it is
                             // below 0, we start charging
-                            if (m_ShotCooldown <= 0.0f)
+                            if (m_ShotCooldown <= 0.0f && m_Shooting.m_CurrentShells>0)
                             {
                                 m_Shooting.StartCharging();
                             }
