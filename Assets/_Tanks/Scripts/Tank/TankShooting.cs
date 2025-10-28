@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+using System;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -85,6 +86,14 @@ namespace Tanks.Complete
 
             // The rate that the launch force charges up is the range of possible forces by the max charge time.
             m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
+
+            // added for bullet controlling
+            m_StartingShells = 10;
+            m_CurrentShells = m_StartingShells;
+            m_MaxShells = 50; 
+            m_ShellsPerCartridge = 10;
+
+            OnShellStockChanged?.Invoke(m_CurrentShells);
         }
 
 
@@ -149,7 +158,8 @@ namespace Tanks.Complete
             m_AimSlider.value = m_BaseMinLaunchForce;
 
             // If the max force has been exceeded and the shell hasn't yet been launched...
-            if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired)
+            //added
+            if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired && m_CurrentShells>0)
             {
                 // ... use the max force and launch the shell.
                 m_CurrentLaunchForce = m_MaxLaunchForce;
@@ -164,7 +174,8 @@ namespace Tanks.Complete
                 m_AimSlider.value = m_CurrentLaunchForce;
             }
             // Otherwise, if the fire button is released and the shell hasn't been launched yet...
-            else if (fireAction.WasReleasedThisFrame() && !m_Fired)
+            //added
+            else if (fireAction.WasReleasedThisFrame() && !m_Fired && m_CurrentShells>0)
             {
                 // ... launch the shell.
                 Fire ();
@@ -184,15 +195,19 @@ namespace Tanks.Complete
             m_AimSlider.value = m_BaseMinLaunchForce;
 
             // If the max force has been exceeded and the shell hasn't yet been launched...
-            if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired)
+            if (m_CurrentLaunchForce > m_MaxLaunchForce && !m_Fired)
             {
+                m_ChargingForward=false;
                 // ... use the max force and launch the shell.
                 m_CurrentLaunchForce = m_MaxLaunchForce;
-                Fire ();
+                //Fire ();
             }
             // Otherwise, if the fire button has just started being pressed...
-            else if (m_ShotCooldownTimer <= 0 && fireAction.WasPressedThisFrame())
+            // added 
+            else if (m_ShotCooldownTimer <= 0 && fireAction.WasPressedThisFrame() && m_CurrentShells>0)
             {
+
+                //Debug.Log("pressed");
                 // ... reset the fired flag and reset the launch force.
                 m_Fired = false;
                 m_CurrentLaunchForce = m_MinLaunchForce;
@@ -201,12 +216,23 @@ namespace Tanks.Complete
                 m_ShootingAudio.clip = m_ChargingClip;
                 m_ShootingAudio.Play ();
             }
+            else if (m_CurrentLaunchForce < m_MinLaunchForce && !m_Fired)
+            {
+                m_ChargingForward=true;
+                // ... use the max force and launch the shell.
+                m_CurrentLaunchForce = m_MinLaunchForce;
+                //Fire ();
+            }
             // Otherwise, if the fire button is being held and the shell hasn't been launched yet...
             else if (fireAction.IsPressed() && !m_Fired)
             {
+                if(m_ChargingForward){
                 // Increment the launch force and update the slider.
-                m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
-
+                    m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
+                }else
+                {
+                    m_CurrentLaunchForce -= m_ChargeSpeed * Time.deltaTime;
+                }
                 m_AimSlider.value = m_CurrentLaunchForce;
             }
             // Otherwise, if the fire button is released and the shell hasn't been launched yet...
@@ -230,6 +256,12 @@ namespace Tanks.Complete
 
             // Set the fired flag so only Fire is only called once.
             m_Fired = true;
+
+            //decrease amount of bullet
+            m_CurrentShells--;
+
+            //Debug.Log(m_CurrentShells);
+            OnShellStockChanged?.Invoke(m_CurrentShells);
 
             // Create an instance of the shell and store a reference to it's rigidbody.
             Rigidbody shellInstance =
@@ -276,6 +308,21 @@ namespace Tanks.Complete
             m_HasSpecialShell = true;
             m_SpecialShellMultiplier = damageMultiplier;
         }
+
+        //added
+        public void AddShells()
+        {
+            if(m_CurrentShells < m_MaxShells-m_ShellsPerCartridge)
+            {
+                m_ShellsPerCartridge+=10;
+            }
+            else
+            {
+                m_ShellsPerCartridge=m_MaxShells;
+            }
+            OnShellStockChanged?.Invoke(m_CurrentShells);
+        }
+
 
         /// <summary>
         /// Return the estyimated position the projectile will have with the charging level (between 0 & 1)
