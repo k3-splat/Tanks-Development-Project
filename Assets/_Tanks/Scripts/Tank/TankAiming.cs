@@ -21,13 +21,17 @@ namespace Tanks.Complete
         [Tooltip("砲塔と同期して回転するSliderのTransform")]
         public Transform m_TurretSliderTransform;
 
+        [HideInInspector] // Inspectorには表示しない
+        public bool m_IsComputerControlled { get; set; } = false; // AI制御フラグ
+        private float m_ComputerAimInput = 0f; // AIからの回転指示値 (-1 ~ +1)
+
         // 親オブジェクトが持つTankInputUserへの参照
         private TankInputUser m_InputUser;
         // "Aim"アクションへの参照
         private InputAction m_AimAction;
-        
+
         // 現在のAim入力値 (-1.0f ～ +1.0f)
-        private float m_AimInputValue;
+        private float m_AimInputValue; // プレイヤー入力 or AI入力
 
         // TankMovement.cs (Awake) を参考に
         private void Awake()
@@ -48,27 +52,37 @@ namespace Tanks.Complete
         {
             if (m_InputUser == null) return;
 
-            // Input Action Assetから "Aim" アクションを探します
-            m_AimAction = m_InputUser.ActionAsset.FindAction(m_AimActionName);
-
-            if (m_AimAction == null)
+            if (!m_IsComputerControlled)
             {
-                Debug.LogError($"Input Action '{m_AimActionName}' が見つかりません。Tank_Actions.inputactionsを確認してください。", this);
-                enabled = false;
-                return;
-            }
+                // Input Action Assetから "Aim" アクションを探します
+                m_AimAction = m_InputUser.ActionAsset.FindAction(m_AimActionName);
 
-            // アクションを有効化します
-            m_AimAction.Enable();
+                if (m_AimAction == null)
+                {
+                    Debug.LogError($"Input Action '{m_AimActionName}' が見つかりません。Tank_Actions.inputactionsを確認してください。", this);
+                    enabled = false;
+                    return;
+                }
+
+                // アクションを有効化します
+                m_AimAction.Enable();
+            }
         }
 
         // TankMovement.cs (Update) を参考に
         private void Update()
         {
-            if (m_AimAction == null) return;
-
-            // "Aim" アクションから入力値を読み取ります
-            m_AimInputValue = m_AimAction.ReadValue<float>();
+            if (!m_IsComputerControlled)
+            {
+                // プレイヤー操作の場合
+                if (m_AimAction == null) return;
+                m_AimInputValue = m_AimAction.ReadValue<float>();
+            }
+            else
+            {
+                // AI操作の場合 (m_ComputerAimInputはSetAimInputメソッドで設定される)
+                m_AimInputValue = m_ComputerAimInput;
+            }
 
             // 読み取った値で回転処理を呼び出します
             Turn();
@@ -92,18 +106,32 @@ namespace Tanks.Complete
             }
         }
 
+        /// <summary>
+        /// AIが砲塔の回転入力を設定するためのメソッド
+        /// </summary>
+        /// <param name="aimValue">-1 (左回転) から +1 (右回転) の値</param>
+        public void SetAimInput(float aimValue)
+        {
+            m_ComputerAimInput = Mathf.Clamp(aimValue, -1f, 1f);
+        }
+
         // TankMovement.cs (OnEnable/OnDisable) を参考に
         private void OnEnable()
         {
-            // m_AimActionが初期化済みなら有効化する
-            m_AimAction?.Enable();
+            if (!m_IsComputerControlled)
+            {
+                m_AimAction?.Enable();
+            }
             m_AimInputValue = 0f;
+            m_ComputerAimInput = 0f; // AI入力もリセット
         }
 
         private void OnDisable()
         {
-            // このスクリプトが無効になったら入力受付も停止する
-            m_AimAction?.Disable();
+            if (!m_IsComputerControlled)
+            {
+                m_AimAction?.Disable();
+            }
         }
     }
 }
