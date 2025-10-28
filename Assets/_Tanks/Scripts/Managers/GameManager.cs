@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
+
 namespace Tanks.Complete
 {
 
@@ -198,7 +199,7 @@ namespace Tanks.Complete
             if (m_GameWinner != null)
             {
                 // If there is a game winner, restart the level.
-                SceneManager.LoadScene (0);
+                SceneManager.LoadScene ("HomeScene");
             }
             else
             {
