@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
+using System.Linq;
 
 namespace Tanks.Complete
 {
@@ -95,7 +96,23 @@ namespace Tanks.Complete
             m_EndWait = new WaitForSeconds (m_EndDelay);
 
             SpawnAllTanks();
-            SetCameraTargets();
+
+            var tpsCam = FindFirstObjectByType<TPSCamera>();
+            if (tpsCam != null && m_SpawnPoints.Length > 0 && m_SpawnPoints[0].m_Instance != null)
+            {
+                var camTarget = m_SpawnPoints[0].m_Instance
+                    .GetComponentsInChildren<Transform>(true)
+                    .FirstOrDefault(tr => tr.name == "CameraTarget");
+                if (camTarget != null)
+                {
+                    tpsCam.target = camTarget;
+                    Debug.Log("[GM] TPSCamera target bound to P1 CameraTarget");
+                }
+                else
+                {
+                    Debug.LogWarning("[GM] CameraTarget not found under P1 tank.");
+                }
+            }
 
             // Once the tanks have been created and the camera is using them as targets, start the game.
             StartCoroutine (GameLoop ());
@@ -165,21 +182,6 @@ namespace Tanks.Complete
         }
 
 
-        private void SetCameraTargets()
-        {
-            // Create a collection of transforms the same size as the number of tanks.
-            Transform[] targets = new Transform[m_PlayerCount];
-
-            // For each of these transforms...
-            for (int i = 0; i < targets.Length; i++)
-            {
-                // ... set it to the appropriate tank transform.
-                targets[i] = m_SpawnPoints[i].m_Instance.transform;
-            }
-
-            // These are the targets the camera should follow.
-            m_CameraControl.m_Targets = targets;
-        }
 
 
         // This is called from start and will run each phase of the game one after another.
@@ -215,9 +217,6 @@ namespace Tanks.Complete
             // As soon as the round starts reset the tanks and make sure they can't move.
             ResetAllTanks ();
             DisableTankControl ();
-
-            // Snap the camera's zoom and position to something appropriate for the reset tanks.
-            m_CameraControl.SetStartPositionAndSize ();
 
             // Increment the round number and display text showing the players what round it is.
             m_RoundNumber++;
