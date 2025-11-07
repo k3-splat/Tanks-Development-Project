@@ -1,0 +1,11 @@
+# Gitにテキストファイルを自動判別させ、改行コードをLFに統一させる
+* text=auto eol=lf
+
+# Unityのテキストファイルも明示的にLFを指定
+*.cs     text eol=lf
+*.shader text eol=lf
+*.meta   text eol=lf
+*.asset  text eol=lf
+*.unity  text eol=lf
+*.prefab text eol=lf
+*.mat    text eol=lf

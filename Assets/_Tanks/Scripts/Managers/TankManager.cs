@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.UIElements;

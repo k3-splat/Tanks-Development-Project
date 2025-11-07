@@ -21,8 +21,6 @@ namespace Tanks.Complete
         private float m_ShieldValue;                        // Percentage of reduced damage when the tank has a shield.
         private bool m_IsInvincible;                        // Is the tank invincible in this moment?
 
-        private TankWormholeTravel m_WormholeTravel; // ワープ処理スクリプトへの参照
-
         private void Awake ()
         {
             // Instantiate the explosion prefab and get a reference to the particle system on it.
@@ -33,17 +31,9 @@ namespace Tanks.Complete
 
             // Disable the prefab so it can be activated when it's required.
             m_ExplosionParticles.gameObject.SetActive (false);
-
+            
             // Set the slider max value to the max health the tank can have
             m_Slider.maxValue = m_StartingHealth;
-            
-            // 同じGameObjectにある TankWormholeTravel コンポーネントを取得
-            m_WormholeTravel = GetComponent<TankWormholeTravel>();
-            if (m_WormholeTravel == null)
-            {
-                // TankWormholeTravel がない場合は警告を出す (必須ではないがあると便利)
-                Debug.LogWarning("TankWormholeTravel component not found on this tank.", this);
-            }
         }
 
         private void OnDestroy()
@@ -68,12 +58,6 @@ namespace Tanks.Complete
 
         public void TakeDamage (float amount)
         {
-            // ワームホール移動中 (IsTraveling == true) なら、ダメージ処理をスキップ
-            if (m_WormholeTravel != null && m_WormholeTravel.IsTraveling)
-            {
-                return; // ここで処理を中断
-            }
-
             // Check if the tank is not invincible
             if (!m_IsInvincible)
             {
