@@ -89,15 +89,15 @@ namespace Tanks.Complete
             {
                 var camTarget = m_SpawnPoints[0].m_Instance
                     .GetComponentsInChildren<Transform>(true)
-                    .FirstOrDefault(tr => tr.name == "CameraTurret");
+                    .FirstOrDefault(tr => tr.name == "CameraTarget");
                 if (camTarget != null)
                 {
                     tpsCam.target = camTarget;
-                    Debug.Log("[GM] TPSCamera target bound to P1 CameraTurret");
+                    Debug.Log("[GM] TPSCamera target bound to P1 CameraTarget");
                 }
                 else
                 {
-                    Debug.LogWarning("[GM] CameraTurret not found under P1 tank.");
+                    Debug.LogWarning("[GM] CameraTarget not found under P1 tank.");
                 }
             }
 
