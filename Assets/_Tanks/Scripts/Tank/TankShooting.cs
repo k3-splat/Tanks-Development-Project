@@ -35,8 +35,10 @@ namespace Tanks.Complete
         public float CurrentChargeRatio =>
             (m_CurrentLaunchForce - m_MinLaunchForce) / (m_MaxLaunchForce - m_MinLaunchForce); //The charging amount between 0-1
         public bool IsCharging => m_IsCharging;
-        
+
         public bool m_IsComputerControlled { get; set; } = false;
+        
+        private TankWormholeTravel m_WormholeTravel; // ワープ処理スクリプトへの参照
 
         private string m_FireButton;                // The input axis that is used for launching shells.
         private float m_CurrentLaunchForce;         // The force that will be given to the shell when the fire button is released.
@@ -78,6 +80,12 @@ namespace Tanks.Complete
             m_InputUser = GetComponent<TankInputUser>();
             if (m_InputUser == null)
                 m_InputUser = gameObject.AddComponent<TankInputUser>();
+
+            m_WormholeTravel = GetComponent<TankWormholeTravel>();
+            if (m_WormholeTravel == null)
+            {
+                Debug.LogWarning("TankWormholeTravel component not found on this tank.", this);
+            }
         }
 
         private void Start ()
@@ -103,6 +111,20 @@ namespace Tanks.Complete
 
         private void Update ()
         {
+            // ワームホール移動中なら、Update処理全体をスキップ
+            if (m_WormholeTravel != null && m_WormholeTravel.IsTraveling)
+            {
+                // (オプション) もしチャージ中だったらキャンセルする
+                if (m_IsCharging)
+                {
+                    m_IsCharging = false;
+                    m_CurrentLaunchForce = m_MinLaunchForce;
+                    m_AimSlider.value = m_BaseMinLaunchForce; // スライダーもリセット
+                    m_ShootingAudio.Stop(); // チャージ音停止
+                }
+                return;
+            }
+
             // Computer and Human control Tank use 2 different update functions 
             if (!m_IsComputerControlled)
             {
@@ -119,6 +141,8 @@ namespace Tanks.Complete
         /// </summary>
         public void StartCharging()
         {
+            if (m_WormholeTravel != null && m_WormholeTravel.IsTraveling) return;
+            
             m_IsCharging = true;
             // ... reset the fired flag and reset the launch force.
             m_Fired = false;
@@ -131,6 +155,9 @@ namespace Tanks.Complete
 
         public void StopCharging()
         {
+            // Fire()の中でチェックされるので必須ではないが、念のため追加
+            if (m_WormholeTravel != null && m_WormholeTravel.IsTraveling) return;
+
             if (m_IsCharging)
             {
                 Fire();
@@ -232,6 +259,15 @@ namespace Tanks.Complete
 
         private void Fire ()
         {
+            // ワームホール移動中なら発射処理をスキップ
+            if (m_WormholeTravel != null && m_WormholeTravel.IsTraveling)
+            {
+                // (オプション) チャージ状態などをリセット
+                m_Fired = true; // 発射されたことにする (再発射を防ぐため)
+                m_CurrentLaunchForce = m_MinLaunchForce;
+                return;
+            }
+
             // Set the fired flag so only Fire is only called once.
             m_Fired = true;
 
