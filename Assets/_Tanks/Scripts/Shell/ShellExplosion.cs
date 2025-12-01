@@ -18,7 +18,10 @@ namespace Tanks.Complete
         private void Start ()
         {
             // If it isn't destroyed by then, destroy the shell after its lifetime.
-            Destroy (gameObject, m_MaxLifeTime);
+            if (!CompareTag("Mine"))
+            {
+                Destroy(gameObject, m_MaxLifeTime);
+            }
         }
 
 
