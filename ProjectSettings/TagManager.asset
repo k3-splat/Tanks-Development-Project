@@ -5,8 +5,6 @@ TagManager:
   serializedVersion: 3
   tags:
   - CameraTarget
-  - Mine
-  - ShellCartirdge
   layers:
   - Default
   - TransparentFX
