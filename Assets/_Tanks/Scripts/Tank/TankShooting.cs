@@ -328,13 +328,23 @@ namespace Tanks.Complete
         {
             if(m_CurrentShells < m_MaxShells-m_ShellsPerCartridge)
             {
-                m_ShellsPerCartridge+=10;
+                m_CurrentShells+=10;
             }
             else
             {
-                m_ShellsPerCartridge=m_MaxShells;
+                m_CurrentShells=m_MaxShells;
             }
             OnShellStockChanged?.Invoke(m_CurrentShells);
+        }
+
+        void OnCollisionEnter(Collision collision)
+        {
+            // 衝突した相手が ShellCartridge というタグを持っている場合
+            if (collision.gameObject.CompareTag("ShellCartridge"))
+            {
+                AddShells();
+                Destroy(collision.gameObject);
+            }
         }
 
 
