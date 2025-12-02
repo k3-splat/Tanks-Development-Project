@@ -38,6 +38,8 @@ namespace Tanks.Complete
         public float m_StartDelay = 3f;             // The delay between the start of RoundStarting and RoundPlaying phases.
         public float m_EndDelay = 3f;               // The delay between the end of RoundPlaying and RoundEnding phases.
         public CameraControl m_CameraControl;       // Reference to the CameraControl script for control during different phases.
+        public HPController hp;                   // Reference to the HUD Controller for updating HUD elements.
+        public WinsController wins;
 
         [Header("Tanks Prefabs")]
         public GameObject m_Tank1Prefab;            // The Prefab used by the tank in Slot 1 of the Menu
@@ -61,6 +63,7 @@ namespace Tanks.Complete
         private TextMeshProUGUI m_TitleText;        // The text used to display game message. Automatically found as part of the Menu prefab
 
         private GameLoopState m_CurrentGameState;
+
 
         public event Action<GameLoopState> OnGameStateChanged;
 
@@ -106,7 +109,6 @@ namespace Tanks.Complete
                 if (camTarget != null)
                 {
                     tpsCam.target = camTarget;
-                    Debug.Log("[GM] TPSCamera target bound to P1 CameraTarget");
                 }
                 else
                 {
@@ -145,6 +147,15 @@ namespace Tanks.Complete
             m_TankData = playerData;
             m_PlayerCount = m_TankData.Length;
             ChangeGameState(GameState.Game);
+
+            if (wins != null && m_PlayerCount >= 2)
+            {
+                wins.UpdateWins(
+                    m_SpawnPoints[0].m_Wins,
+                    m_SpawnPoints[1].m_Wins,
+                    m_NumRoundsToWin);
+            }
+
         }
 
 
@@ -169,6 +180,23 @@ namespace Tanks.Complete
                 m_SpawnPoints[i].ControlIndex = playerData.ControlIndex;
                 m_SpawnPoints[i].m_PlayerColor = playerData.TankColor;
                 m_SpawnPoints[i].m_ComputerControlled = playerData.IsComputer;
+
+                if (hp != null)
+                {
+                    var health = m_SpawnPoints[i].m_Instance.GetComponent<TankHealth>();
+                    if (health != null)
+                    {
+                        // プレイヤー1を自機、プレイヤー2を敵機とみなす想定
+                        if (m_SpawnPoints[i].m_PlayerNumber == 1)
+                        {
+                            hp.SetPlayerTank(health);
+                        }
+                        else if (m_SpawnPoints[i].m_PlayerNumber == 2)
+                        {
+                            hp.SetEnemyTank(health);
+                        }
+                    }
+                }
             }
 
             //we delayed setup after all tanks are created as they expect to have access to all other tanks in the manager
@@ -179,6 +207,8 @@ namespace Tanks.Complete
                 
                 tank.Setup(this);
             }
+
+            
         }
 
 
@@ -267,6 +297,15 @@ namespace Tanks.Complete
             // Get a message based on the scores and whether or not there is a game winner and display it.
             string message = EndMessage ();
             m_TitleText.text = message;
+
+            if (wins != null && m_PlayerCount >= 2)
+            {
+                int p1Wins = m_SpawnPoints[0].m_Wins;
+                int p2Wins = m_SpawnPoints[1].m_Wins;
+                int winsToWin = m_NumRoundsToWin;
+
+                wins.UpdateWins(p1Wins, p2Wins, winsToWin);
+            }
 
             // Wait for the specified length of time until yielding control back to the game loop.
             yield return m_EndWait;

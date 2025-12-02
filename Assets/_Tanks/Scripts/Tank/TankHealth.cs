@@ -11,6 +11,8 @@ namespace Tanks.Complete
         public Color m_FullHealthColor = Color.green;    // The color the health bar will be when on full health.
         public Color m_ZeroHealthColor = Color.red;      // The color the health bar will be when on no health.
         public GameObject m_ExplosionPrefab;                // A prefab that will be instantiated in Awake, then used whenever the tank dies.
+        public float StartingHealth => m_StartingHealth;
+        public float CurrentHealth  => m_CurrentHealth;
         [HideInInspector] public bool m_HasShield;          // Has the tank picked up a shield power up?
         
         
