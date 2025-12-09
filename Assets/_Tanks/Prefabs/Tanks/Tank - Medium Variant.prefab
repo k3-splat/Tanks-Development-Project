@@ -10592,6 +10592,11 @@ MonoBehaviour:
   m_ExplosionRadius: 3
   m_InputUser: {fileID: 0}
   m_CurrentShells: 0
+  m_MineStockData:
+    m_InitialQuantity: 0
+    m_MaxCapacity: 3
+    m_ReplenishQuantity: 1
+  m_Mine: {fileID: 192454, guid: 1f1d976e7b7ed994c8c37c58cd133679, type: 3}
 --- !u!114 &7407515674465610258
 MonoBehaviour:
   m_ObjectHideFlags: 0

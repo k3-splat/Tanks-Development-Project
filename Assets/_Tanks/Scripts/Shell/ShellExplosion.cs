@@ -11,7 +11,7 @@ namespace Tanks.Complete
 
         // All those are hidden in inspector as they will actually come from the TankShooting scripts
         [HideInInspector] public float m_MaxDamage = 100f;                    // The amount of damage done if the explosion is centred on a tank.
-        [HideInInspector] public float m_ExplosionForce = 50f;                // The amount of force added to a tank at the centre of the explosion.
+        [HideInInspector] public float m_ExplosionForce = 5f;                // The amount of force added to a tank at the centre of the explosion.
         [HideInInspector] public float m_ExplosionRadius = 5f;                // The maximum distance away from the explosion tanks can be and are still affected.
 
 

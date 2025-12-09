@@ -7,10 +7,10 @@ namespace Tanks.Complete
     {
         // 2. フィールド定義 -----------------------------
 
-        [Header("Cartridge Settings")]
-        [SerializeField] private GameObject shellCartridge;  // 砲弾カートリッジのプレハブ
+        [Header("Cartridge Data")]
+        [SerializeField] private CartridgeData shellCartridgeData; // 砲弾
+        [SerializeField] private CartridgeData mineCartridgeData;  // 地雷
 
-        [SerializeField] private float spawnInterval = 2f;   // 生成間隔（秒）
 
         // x,z の広さを表す。y はこのオブジェクトの高さを使う。
         [SerializeField] private Vector2 spawnArea = new Vector2(40f, 40f);
@@ -25,14 +25,8 @@ namespace Tanks.Complete
         }
 
         // 3. Cartridge を1つ生成するメソッド -------------
-        private void SpawnCartridge()
+        private void SpawnCartridge(CartridgeData data)
         {
-            if (shellCartridge == null)
-            {
-                Debug.LogWarning("[CartridgeSpawner] shellCartridge プレハブが未設定です。");
-                return;
-            }
-
             // このオブジェクトを中心として、x,z 方向にランダムにずらす
             Vector3 center = transform.position;
 
@@ -47,16 +41,16 @@ namespace Tanks.Complete
             );
 
             // 向きはとりあえずそのまま（必要ならランダム回転でもOK）
-            Instantiate(shellCartridge, spawnPos, Quaternion.identity);
+            Instantiate(data.cartridgePrefab, spawnPos, Quaternion.identity);
         }
 
         // 4. 一定間隔で生成するコルーチン ---------------
-        private IEnumerator SpawnRoutine()
+        private IEnumerator SpawnRoutine(CartridgeData data)
         {
             while (true)
             {
-                SpawnCartridge();
-                yield return new WaitForSeconds(spawnInterval);
+                SpawnCartridge(data);
+                yield return new WaitForSeconds(data.spawnInterval);
             }
         }
 
@@ -65,11 +59,13 @@ namespace Tanks.Complete
 
             if (newState == GameManager.GameLoopState.RoundPlaying)
             {
-                StartCoroutine(SpawnRoutine());
+                StartCoroutine(SpawnRoutine(shellCartridgeData));
+                StartCoroutine(SpawnRoutine(mineCartridgeData));
             }
             else
             {
-                StopCoroutine(SpawnRoutine());
+                StopCoroutine(SpawnRoutine(shellCartridgeData));
+                StopCoroutine(SpawnRoutine(mineCartridgeData));
             }
         }
     }

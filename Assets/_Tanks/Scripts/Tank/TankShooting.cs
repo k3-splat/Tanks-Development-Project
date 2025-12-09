@@ -61,6 +61,17 @@ namespace Tanks.Complete
         private bool m_ChargingForward=true;
 
         public event Action<int> OnShellStockChanged;
+
+        // --- Mine（地雷）管理用 ---
+        [SerializeField] private WeaponStockData m_MineStockData;  // 地雷の所持数を管理する ScriptableObject 等
+        [SerializeField] private GameObject m_Mine;                // 地雷プレハブ
+
+        private string m_SetMineButton; // 地雷設置用のキー名（Input Manager 使用時）
+
+        public event Action<int> OnWeaponStockChanged;     // 地雷の所持数が変化した時のイベント
+        public event Action<Vector3> OnMinePlaced;         // 地雷が設置されたことを通知（座標などを渡す）
+
+        private InputAction setMineAction; // 新 Input System 用のアクション
         
         private void OnEnable()
         {
@@ -95,6 +106,11 @@ namespace Tanks.Complete
             fireAction = m_InputUser.ActionAsset.FindAction(m_FireButton);
             
             fireAction.Enable();
+
+            m_SetMineButton = "SetMine";
+            setMineAction = m_InputUser.ActionAsset.FindAction(m_SetMineButton);
+            
+            setMineAction.Enable();
 
             // The rate that the launch force charges up is the range of possible forces by the max charge time.
             m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
@@ -254,6 +270,13 @@ namespace Tanks.Complete
                 // ... launch the shell.
                 Fire ();
             }
+
+
+            if (setMineAction.WasPressedThisFrame())
+            {
+                Debug.Log("pressed");
+                PlaceMine();
+            }
         }
 
 
@@ -316,6 +339,24 @@ namespace Tanks.Complete
             m_ShotCooldownTimer = m_ShotCooldown;
         }
 
+        private void PlaceMine()
+        {
+            if (m_MineStockData.GetCurrentQuantity() > 0){
+
+            // 実際に地雷を設置
+            Instantiate(m_Mine, transform.position, transform.rotation);
+
+            // 所持地雷を減らす
+            m_MineStockData.Use();
+
+            // イベント通知（UI などが更新）
+            OnWeaponStockChanged?.Invoke(m_MineStockData.GetCurrentQuantity());
+
+            // 地雷を置いたことを通知（位置を渡せる）
+            OnMinePlaced?.Invoke(transform.position);
+            }
+        }
+
 
         public void EquipSpecialShell(float damageMultiplier)
         {
@@ -343,6 +384,11 @@ namespace Tanks.Complete
             if (collision.gameObject.CompareTag("ShellCartridge"))
             {
                 AddShells();
+                Destroy(collision.gameObject);
+            }
+            if (collision.gameObject.CompareTag("MineCartridge"))
+            {
+                m_MineStockData.Replenish();
                 Destroy(collision.gameObject);
             }
         }

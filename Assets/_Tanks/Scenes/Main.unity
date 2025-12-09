@@ -148,8 +148,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12878e59e76179349a72b4bba0cf551f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shellCartridge: {fileID: 262811942050609096, guid: 6f3b9401fdd183e4c863a6f6908c1b8b, type: 3}
-  spawnInterval: 2
+  shellCartridgeData:
+    cartridgePrefab: {fileID: 262811942050609096, guid: 6f3b9401fdd183e4c863a6f6908c1b8b, type: 3}
+    spawnInterval: 2
+  mineCartridgeData:
+    cartridgePrefab: {fileID: 262811942050609096, guid: a3fc1f3b014858a4baf9410693fa1dfd, type: 3}
+    spawnInterval: 2
   spawnArea: {x: 40, y: 40}
   gameManager: {fileID: 1665113858}
 --- !u!4 &49211941
@@ -1431,8 +1435,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: TANKS!
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 0a8bd698d5648464b89c77f8fb013429, type: 2}
-  m_sharedMaterial: {fileID: 6495878506160170357, guid: 0a8bd698d5648464b89c77f8fb013429, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2802,3 +2806,7 @@ SceneRoots:
   - {fileID: 1169452044}
   - {fileID: 1918689136}
   - {fileID: 49211941}
+  - {fileID: 1346380548}
+  - {fileID: 2831506762104071498}
+  - {fileID: 1663215385}
+  - {fileID: 209851393}
