@@ -9,12 +9,17 @@ namespace Tanks.Complete
         [SerializeField]private int m_InitialQuantity;
         [SerializeField]private int m_MaxCapacity;
         [SerializeField]private int m_ReplenishQuantity;
+        [SerializeField]private int m_WeaponTag;
 
         private int m_CurrentQuantity;
 
         public int GetCurrentQuantity()
         {
             return m_CurrentQuantity;
+        }
+        public int GetWeaponTag()
+        {
+            return m_WeaponTag;
         }
         public void InitializeQuantity()
         {

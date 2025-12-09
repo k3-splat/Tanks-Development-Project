@@ -15,8 +15,8 @@ GameObject:
   - component: {fileID: 7567729978631496205}
   - component: {fileID: 314996934641192102}
   m_Layer: 0
-  m_Name: MineCartridge
-  m_TagString: MineCartridge
+  m_Name: ShellCartridge
+  m_TagString: ShellCartridge
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -67,7 +67,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: db9ceca9e86a2724aaa5c3df2991dba7, type: 2}
+  - {fileID: 2100000, guid: 65b34bd0b696fd64c809daa8ff1aac63, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
