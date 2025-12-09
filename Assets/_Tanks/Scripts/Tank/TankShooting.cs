@@ -369,11 +369,11 @@ namespace Tanks.Complete
         {
             if(m_CurrentShells < m_MaxShells-m_ShellsPerCartridge)
             {
-                m_CurrentShells+=10;
+                m_ShellsPerCartridge+=10;
             }
             else
             {
-                m_CurrentShells=m_MaxShells;
+                m_ShellsPerCartridge=m_MaxShells;
             }
             OnShellStockChanged?.Invoke(m_CurrentShells);
         }
