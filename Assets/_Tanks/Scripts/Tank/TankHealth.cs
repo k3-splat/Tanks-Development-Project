@@ -14,7 +14,7 @@ namespace Tanks.Complete
         public float StartingHealth => m_StartingHealth;
         public float CurrentHealth  => m_CurrentHealth;
         [HideInInspector] public bool m_HasShield;          // Has the tank picked up a shield power up?
-        
+        private TankWormholeTravel m_WormholeTravel;        // ワープ処理スクリプトへの参照
         
         private AudioSource m_ExplosionAudio;               // The audio source to play when the tank explodes.
         private ParticleSystem m_ExplosionParticles;        // The particle system the will play when the tank is destroyed.
@@ -33,9 +33,17 @@ namespace Tanks.Complete
 
             // Disable the prefab so it can be activated when it's required.
             m_ExplosionParticles.gameObject.SetActive (false);
-            
+
             // Set the slider max value to the max health the tank can have
             m_Slider.maxValue = m_StartingHealth;
+            
+            // 同じGameObjectにある TankWormholeTravel コンポーネントを取得
+            m_WormholeTravel = GetComponent<TankWormholeTravel>();
+            if (m_WormholeTravel == null)
+            {
+                // TankWormholeTravel がない場合は警告を出す (必須ではないがあると便利)
+                Debug.LogWarning("TankWormholeTravel component not found on this tank.", this);
+            }
         }
 
         private void OnDestroy()
@@ -60,6 +68,12 @@ namespace Tanks.Complete
 
         public void TakeDamage (float amount)
         {
+            // ワームホール移動中 (IsTraveling == true) なら、ダメージ処理をスキップ
+            if (m_WormholeTravel != null && m_WormholeTravel.IsTraveling)
+            {
+                return; // ここで処理を中断
+            }
+
             // Check if the tank is not invincible
             if (!m_IsInvincible)
             {

@@ -6,6 +6,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.UIElements;
+using System.Collections;
 
 namespace Tanks.Complete
 {
@@ -36,11 +37,13 @@ namespace Tanks.Complete
         private InputUser m_InputUser;                          // The Input user link to that tank. Input user identify a single player in the Input system
         
 
-        public event Action<int, int> OnWeaponStockChanged;
+        private GameManager m_GameManager;
+        public event Action<int, WeaponStockData> OnWeaponStockChanged;
         
         public void Setup (GameManager manager)
         {
             // Get references to the components.
+            m_GameManager=manager;
             m_Movement = m_Instance.GetComponent<TankMovement> ();
             m_Shooting = m_Instance.GetComponent<TankShooting> ();
             m_AI = m_Instance.GetComponent<TankAI> ();
@@ -88,12 +91,34 @@ namespace Tanks.Complete
                 }
             }
 
-            m_Shooting.OnShellStockChanged += HandleShellStockChanged;
+            m_Shooting.OnWeaponStockChanged += HandleWeaponStockChanged;
+
+                // 地雷設置イベントを受け取る
+            m_Shooting.OnMinePlaced += OnMinePlaced;
         }
 
-        private void HandleShellStockChanged(int currentShells)
+        private IEnumerator PlaceMineRoutine()
         {
-            OnWeaponStockChanged?.Invoke(ControlIndex, currentShells);
+            // 操作を停止
+            DisableControl();
+
+            // 好きな時間だけ停止（例として 0.5 秒）
+            yield return new WaitForSeconds(1f);
+
+            // 操作を再開
+            EnableControl();
+        }
+
+        private void OnMinePlaced(Vector3 position)
+        {
+            // TankManager は MonoBehaviour ではないので、自分では StartCoroutine できない
+            // → GameManager にコルーチンを走らせてもらう
+            m_GameManager.StartCoroutine(PlaceMineRoutine());
+        }
+
+        private void HandleWeaponStockChanged(WeaponStockData data)
+        {
+            OnWeaponStockChanged?.Invoke(m_PlayerNumber, data);
         }
         // Used during the phases of the game where the player shouldn't be able to control their tank.
         public void DisableControl ()

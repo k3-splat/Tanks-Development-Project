@@ -35,8 +35,10 @@ namespace Tanks.Complete
         public float CurrentChargeRatio =>
             (m_CurrentLaunchForce - m_MinLaunchForce) / (m_MaxLaunchForce - m_MinLaunchForce); //The charging amount between 0-1
         public bool IsCharging => m_IsCharging;
-        
+
         public bool m_IsComputerControlled { get; set; } = false;
+        
+        private TankWormholeTravel m_WormholeTravel; // ワープ処理スクリプトへの参照
 
         private string m_FireButton;                // The input axis that is used for launching shells.
         private float m_CurrentLaunchForce;         // The force that will be given to the shell when the fire button is released.
@@ -51,14 +53,20 @@ namespace Tanks.Complete
 
         // added for bullet controlling
 
-        private int m_StartingShells;
-        public int m_CurrentShells;
-        private int m_MaxShells;
-        private int m_ShellsPerCartridge;
-
         private bool m_ChargingForward=true;
 
-        public event Action<int> OnShellStockChanged;
+        // --- Mine（地雷）管理用 ---
+        [SerializeField] public WeaponStockData m_ShellStockData;
+
+        [SerializeField] public WeaponStockData m_MineStockData;  // 地雷の所持数を管理する ScriptableObject 等
+        [SerializeField] private GameObject m_Mine;                // 地雷プレハブ
+
+        private string m_SetMineButton; // 地雷設置用のキー名（Input Manager 使用時）
+
+        public event Action<WeaponStockData> OnWeaponStockChanged;     // 地雷の所持数が変化した時のイベント
+        public event Action<Vector3> OnMinePlaced;         // 地雷が設置されたことを通知（座標などを渡す）
+
+        private InputAction setMineAction; // 新 Input System 用のアクション
         
         private void OnEnable()
         {
@@ -78,6 +86,12 @@ namespace Tanks.Complete
             m_InputUser = GetComponent<TankInputUser>();
             if (m_InputUser == null)
                 m_InputUser = gameObject.AddComponent<TankInputUser>();
+
+            m_WormholeTravel = GetComponent<TankWormholeTravel>();
+            if (m_WormholeTravel == null)
+            {
+                Debug.LogWarning("TankWormholeTravel component not found on this tank.", this);
+            }
         }
 
         private void Start ()
@@ -88,21 +102,38 @@ namespace Tanks.Complete
             
             fireAction.Enable();
 
+            m_SetMineButton = "SetMine";
+            setMineAction = m_InputUser.ActionAsset.FindAction(m_SetMineButton);
+            
+            setMineAction.Enable();
+
             // The rate that the launch force charges up is the range of possible forces by the max charge time.
             m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
 
-            // added for bullet controlling
-            m_StartingShells = 10;
-            m_CurrentShells = m_StartingShells;
-            m_MaxShells = 50; 
-            m_ShellsPerCartridge = 10;
+            m_ShellStockData.InitializeQuantity();
+            m_MineStockData.InitializeQuantity();
 
-            OnShellStockChanged?.Invoke(m_CurrentShells);
+            OnWeaponStockChanged?.Invoke(m_ShellStockData);
+            OnWeaponStockChanged?.Invoke(m_MineStockData);
         }
 
 
         private void Update ()
         {
+            // ワームホール移動中なら、Update処理全体をスキップ
+            if (m_WormholeTravel != null && m_WormholeTravel.IsTraveling)
+            {
+                // (オプション) もしチャージ中だったらキャンセルする
+                if (m_IsCharging)
+                {
+                    m_IsCharging = false;
+                    m_CurrentLaunchForce = m_MinLaunchForce;
+                    m_AimSlider.value = m_BaseMinLaunchForce; // スライダーもリセット
+                    m_ShootingAudio.Stop(); // チャージ音停止
+                }
+                return;
+            }
+
             // Computer and Human control Tank use 2 different update functions 
             if (!m_IsComputerControlled)
             {
@@ -119,6 +150,8 @@ namespace Tanks.Complete
         /// </summary>
         public void StartCharging()
         {
+            if (m_WormholeTravel != null && m_WormholeTravel.IsTraveling) return;
+            
             m_IsCharging = true;
             // ... reset the fired flag and reset the launch force.
             m_Fired = false;
@@ -131,6 +164,9 @@ namespace Tanks.Complete
 
         public void StopCharging()
         {
+            // Fire()の中でチェックされるので必須ではないが、念のため追加
+            if (m_WormholeTravel != null && m_WormholeTravel.IsTraveling) return;
+
             if (m_IsCharging)
             {
                 Fire();
@@ -145,7 +181,7 @@ namespace Tanks.Complete
 
             // If the max force has been exceeded and the shell hasn't yet been launched...
             //added
-            if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired && m_CurrentShells>0)
+            if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired && m_ShellStockData.GetCurrentQuantity()>0)
             {
                 // ... use the max force and launch the shell.
                 m_CurrentLaunchForce = m_MaxLaunchForce;
@@ -161,7 +197,7 @@ namespace Tanks.Complete
             }
             // Otherwise, if the fire button is released and the shell hasn't been launched yet...
             //added
-            else if (fireAction.WasReleasedThisFrame() && !m_Fired && m_CurrentShells>0)
+            else if (fireAction.WasReleasedThisFrame() && !m_Fired && m_ShellStockData.GetCurrentQuantity()>0)
             {
                 // ... launch the shell.
                 Fire ();
@@ -190,7 +226,7 @@ namespace Tanks.Complete
             }
             // Otherwise, if the fire button has just started being pressed...
             // added 
-            else if (m_ShotCooldownTimer <= 0 && fireAction.WasPressedThisFrame() && m_CurrentShells>0)
+            else if (m_ShotCooldownTimer <= 0 && fireAction.WasPressedThisFrame() && m_ShellStockData.GetCurrentQuantity()>0)
             {
 
                 //Debug.Log("pressed");
@@ -227,19 +263,35 @@ namespace Tanks.Complete
                 // ... launch the shell.
                 Fire ();
             }
+
+
+            if (setMineAction.WasPressedThisFrame())
+            {
+                Debug.Log("pressed");
+                PlaceMine();
+            }
         }
 
 
         private void Fire ()
         {
+            // ワームホール移動中なら発射処理をスキップ
+            if (m_WormholeTravel != null && m_WormholeTravel.IsTraveling)
+            {
+                // (オプション) チャージ状態などをリセット
+                m_Fired = true; // 発射されたことにする (再発射を防ぐため)
+                m_CurrentLaunchForce = m_MinLaunchForce;
+                return;
+            }
+
             // Set the fired flag so only Fire is only called once.
             m_Fired = true;
 
             //decrease amount of bullet
-            m_CurrentShells--;
+            m_ShellStockData.Use();
 
-            //Debug.Log(m_CurrentShells);
-            OnShellStockChanged?.Invoke(m_CurrentShells);
+            //Debug.Log(m_ShellStockData.GetCurrentQuantity());
+            OnWeaponStockChanged?.Invoke(m_ShellStockData);
 
             // Create an instance of the shell and store a reference to it's rigidbody.
             Rigidbody shellInstance =
@@ -280,6 +332,24 @@ namespace Tanks.Complete
             m_ShotCooldownTimer = m_ShotCooldown;
         }
 
+        private void PlaceMine()
+        {
+            if (m_MineStockData.GetCurrentQuantity() > 0){
+
+            // 実際に地雷を設置
+            Instantiate(m_Mine, transform.position- transform.forward * 2, transform.rotation);
+
+            // 所持地雷を減らす
+            m_MineStockData.Use();
+
+            // イベント通知（UI などが更新）
+            OnWeaponStockChanged?.Invoke(m_MineStockData);
+
+            // 地雷を置いたことを通知（位置を渡せる）
+            OnMinePlaced?.Invoke(transform.position);
+            }
+        }
+
 
         public void EquipSpecialShell(float damageMultiplier)
         {
@@ -287,18 +357,21 @@ namespace Tanks.Complete
             m_SpecialShellMultiplier = damageMultiplier;
         }
 
-        //added
-        public void AddShells()
+        void OnCollisionEnter(Collision collision)
         {
-            if(m_CurrentShells < m_MaxShells-m_ShellsPerCartridge)
+            // 衝突した相手が ShellCartridge というタグを持っている場合
+            if (collision.gameObject.CompareTag("ShellCartridge"))
             {
-                m_ShellsPerCartridge+=10;
+                m_ShellStockData.Replenish();
+                OnWeaponStockChanged?.Invoke(m_ShellStockData);
+                Destroy(collision.gameObject);
             }
-            else
+            if (collision.gameObject.CompareTag("MineCartridge"))
             {
-                m_ShellsPerCartridge=m_MaxShells;
+                m_MineStockData.Replenish();
+                OnWeaponStockChanged?.Invoke(m_MineStockData);
+                Destroy(collision.gameObject);
             }
-            OnShellStockChanged?.Invoke(m_CurrentShells);
         }
 
 
