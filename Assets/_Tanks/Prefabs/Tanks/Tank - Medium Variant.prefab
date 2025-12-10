@@ -388,7 +388,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 64
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 8400000, guid: 35ab68d2142c5e64c8a541f51070d8d6, type: 2}
+  m_TargetTexture: {fileID: 8400000, guid: 886ccb25464869049be99bd65bf25b90, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -10807,7 +10807,17 @@ MonoBehaviour:
   m_ExplosionForce: 50
   m_ExplosionRadius: 3
   m_InputUser: {fileID: 0}
-  m_CurrentShells: 0
+  m_ShellStockData:
+    m_InitialQuantity: 10
+    m_MaxCapacity: 50
+    m_ReplenishQuantity: 10
+    m_WeaponTag: 0
+  m_MineStockData:
+    m_InitialQuantity: 0
+    m_MaxCapacity: 3
+    m_ReplenishQuantity: 1
+    m_WeaponTag: 1
+  m_Mine: {fileID: 192454, guid: 1f1d976e7b7ed994c8c37c58cd133679, type: 3}
 --- !u!114 &7407515674465610258
 MonoBehaviour:
   m_ObjectHideFlags: 0

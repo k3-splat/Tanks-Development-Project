@@ -50,6 +50,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "SetMine",
+                    "type": "Button",
+                    "id": "a4db7649-5cec-4203-830f-247bf0a40ba4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -144,7 +153,7 @@
                 {
                     "name": "",
                     "id": "3364dd8b-160a-470b-aa56-b62215c05355",
-                    "path": "<Keyboard>/enter",
+                    "path": "<Keyboard>/semicolon",
                     "interactions": "",
                     "processors": "",
                     "groups": "KeyboardRight",
@@ -327,6 +336,28 @@
                     "action": "Aim",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "22f20a46-e2ff-4ba8-97d6-1a9cf183b557",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";KeyboardLeft",
+                    "action": "SetMine",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1fb71b19-0697-499b-a619-0c2af0587c1b",
+                    "path": "<Keyboard>/slash",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";KeyboardRight",
+                    "action": "SetMine",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },

@@ -16,6 +16,8 @@ namespace Tanks.Complete
 
         [Header("Managers")]
         [SerializeField] private GameManager GameManager;
+        private PlayerStock player1StockComp;
+        private PlayerStock player2StockComp;
 
         // プレイヤー1（自機）のミニマップ用カメラへの参照
         private Camera player1Camera;
@@ -26,9 +28,8 @@ namespace Tanks.Complete
             // 初期状態ではUIを非表示
             Player1Stock.SetActive(false);
             Player2Stock.SetActive(false);
-            
-            if (MinimapImage != null)
-                MinimapImage.SetActive(false);
+            player1StockComp = Player1Stock.GetComponent<PlayerStock>();
+            player2StockComp = Player2Stock.GetComponent<PlayerStock>();
 
             // ゲームステート変更イベントの購読
             GameManager.OnGameStateChanged += HandleGameStateChanged;
@@ -117,13 +118,28 @@ namespace Tanks.Complete
             }
         }
 
-        // 砲弾ストック数が変更された時の処理
-        private void HandleWeaponStockChanged(int controlIndex, int currentShells)
+        public void HandleWeaponStockChanged(int playerNumber, WeaponStockData weaponData)
         {
-            if (controlIndex == 1)
-                Player1Stock.GetComponent<PlayerStock>().UpdatePlayerStock(currentShells);
-            else if (controlIndex == 2)
-                Player2Stock.GetComponent<PlayerStock>().UpdatePlayerStock(currentShells);
+            if (weaponData == null)
+            {
+                Debug.LogWarning($"[HUDManager] weaponData が null です (playerNumber={playerNumber})");
+                return;
+            }
+
+            switch (playerNumber)
+            {
+                case 1:
+                    player1StockComp?.UpdatePlayerStock(weaponData);
+                break;
+
+                case 2:
+                    player2StockComp?.UpdatePlayerStock(weaponData);
+                    break;
+
+                default:
+                    Debug.LogWarning($"[HUDManager] 未対応の PlayerNumber: {playerNumber}");
+                    break;
+            }
         }
     }
 }
