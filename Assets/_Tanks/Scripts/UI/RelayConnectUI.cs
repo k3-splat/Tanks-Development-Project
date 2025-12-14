@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using System.Linq;
 using UnityEngine;
 
 using Unity.Services.Core;
@@ -10,6 +11,7 @@ using Unity.Services.Relay.Models;
 
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
+
 
 using TMPro;
 
@@ -30,32 +32,32 @@ public class RelayConnectUI : MonoBehaviour
 
     private async Task EnsureServices(string profileName)
     {
-        if (ready) return;
+    if (ready) return;
 
-        // NetworkManager がシーンに無いと先に進んでも意味がないのでチェック
-        if (NetworkManager.Singleton == null)
-        {
-            throw new Exception("NetworkManager がシーンに見つかりません（Lobbyシーンに NetworkManager + UnityTransport が必要）");
-        }
+    if (NetworkManager.Singleton == null)
+        throw new Exception("NetworkManager がシーンに見つかりません");
 
-        statusText.text = "Initializing UGS...";
+    statusText.text = "Initializing UGS...";
 
-        var options = new InitializationOptions().SetEnvironmentName(UGS_ENV);
-        await UnityServices.InitializeAsync(options);
+    var options = new InitializationOptions().SetEnvironmentName(UGS_ENV);
+    await UnityServices.InitializeAsync(options);
 
-        // ★同じPCで2つ起動する時に超重要：HostとClientを別ユーザー扱いにする
-        AuthenticationService.Instance.SwitchProfile(profileName);
-
-        if (!AuthenticationService.Instance.IsSignedIn)
-        {
-            statusText.text = "Signing in...";
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-        }
-
-        ready = true;
-        Debug.Log($"UGS Ready. Env={UGS_ENV} ProjectId={Application.cloudProjectId} PlayerId={AuthenticationService.Instance.PlayerId} Profile={profileName}");
-        statusText.text = $"UGS Ready ({UGS_ENV})";
+    // ★Profile切替は「サインアウト状態」が前提
+    if (AuthenticationService.Instance.IsSignedIn)
+    {
+        AuthenticationService.Instance.SignOut();
     }
+
+    AuthenticationService.Instance.SwitchProfile(profileName);
+
+    statusText.text = "Signing in...";
+    await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
+    ready = true;
+    Debug.Log($"UGS Ready. Env={UGS_ENV} ProjectId={Application.cloudProjectId} PlayerId={AuthenticationService.Instance.PlayerId} Profile={profileName}");
+    statusText.text = $"UGS Ready ({UGS_ENV})";
+    }
+
 
     public async void OnClickHost()
     {
@@ -122,6 +124,7 @@ public class RelayConnectUI : MonoBehaviour
 
             statusText.text = "Joining Relay...";
             JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(code);
+            Debug.Log($"[JOIN] JoinAllocation OK. AllocationIdBytesLen={joinAllocation.AllocationIdBytes?.Length}");
 
             var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
