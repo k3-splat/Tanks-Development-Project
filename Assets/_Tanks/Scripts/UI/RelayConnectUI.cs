@@ -1,8 +1,8 @@
 using System;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using System.Text;
+using System.Linq;
 
 using Unity.Services.Core;
 using Unity.Services.Core.Environments;
@@ -13,48 +13,45 @@ using Unity.Services.Relay.Models;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 
-using Unity.Networking.Transport.Relay;   // RelayServerData
 using TMPro;
 
 public class RelayConnectUI : MonoBehaviour
 {
-    private const string BUILD_STAMP = "2025-12-15_04";  // ★毎回変えて混在を潰す
-    private const string UGS_ENV = "production";         // ★必ず同じにする
-    private const string RELAY_PROTOCOL = "dtls";        // ★基本これ
-
     [Header("UI")]
     [SerializeField] private TMP_InputField joinCodeInput;
     [SerializeField] private TMP_Text joinCodeText;
     [SerializeField] private TMP_Text statusText;
 
     [Header("Relay")]
-    [SerializeField] private int maxConnections = 1; // Host以外に1人
+    [SerializeField] private int maxConnections = 4;
 
-    [Header("Region")]
-    [SerializeField] private bool pinJapanRegion = true; // ★JP固定したいならtrue
-
+    private const string UGS_ENV = "production";
     private bool ready = false;
-    private string role = "Unknown";
+    private string role = "Unknown"; // "Host" or "Client"
 
     private string Tag => $"[RelayUI][{role}][pid={SafePlayerId()}][cloud={Application.cloudProjectId}]";
 
     private void Awake()
     {
-        Debug.Log($"{Tag} Awake() BUILD_STAMP={BUILD_STAMP} unity={Application.unityVersion}");
+        Debug.Log($"{Tag} Awake()");
 
         if (NetworkManager.Singleton == null)
         {
-            Debug.LogError($"{Tag} NetworkManager.Singleton is NULL");
+            Debug.LogError($"{Tag} NetworkManager.Singleton is NULL in Awake");
             return;
         }
 
         NetworkManager.Singleton.OnTransportFailure += OnTransportFailure;
 
-        NetworkManager.Singleton.OnClientConnectedCallback += id =>
-            Debug.Log($"{Tag} OnClientConnected id={id} localId={NetworkManager.Singleton.LocalClientId} isHost={NetworkManager.Singleton.IsHost} count={NetworkManager.Singleton.ConnectedClientsList?.Count}");
+        NetworkManager.Singleton.OnClientConnectedCallback += (id) =>
+        {
+            Debug.Log($"{Tag} OnClientConnectedCallback id={id} localId={NetworkManager.Singleton.LocalClientId} isHost={NetworkManager.Singleton.IsHost} isClient={NetworkManager.Singleton.IsClient} connectedCount={NetworkManager.Singleton.ConnectedClientsList?.Count}");
+        };
 
-        NetworkManager.Singleton.OnClientDisconnectCallback += id =>
-            Debug.Log($"{Tag} OnClientDisconnect id={id} localId={NetworkManager.Singleton.LocalClientId}");
+        NetworkManager.Singleton.OnClientDisconnectCallback += (id) =>
+        {
+            Debug.Log($"{Tag} OnClientDisconnectCallback id={id} localId={NetworkManager.Singleton.LocalClientId} connectedCount={NetworkManager.Singleton.ConnectedClientsList?.Count}");
+        };
 
         var utp = NetworkManager.Singleton.GetComponent<UnityTransport>();
         Debug.Log(utp ? $"{Tag} UnityTransport found" : $"{Tag} UnityTransport NOT found");
@@ -62,8 +59,8 @@ public class RelayConnectUI : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (NetworkManager.Singleton != null)
-            NetworkManager.Singleton.OnTransportFailure -= OnTransportFailure;
+        if (NetworkManager.Singleton == null) return;
+        NetworkManager.Singleton.OnTransportFailure -= OnTransportFailure;
     }
 
     private void OnTransportFailure()
@@ -74,27 +71,22 @@ public class RelayConnectUI : MonoBehaviour
     private async Task EnsureServices(string profileName)
     {
         if (ready) return;
+
         role = profileName;
 
         statusText.text = "Initializing UGS...";
         Debug.Log($"{Tag} UnityServices.InitializeAsync START env={UGS_ENV} profile={profileName}");
 
-        // ★SetEnvironmentName はこの using が必須：Unity.Services.Core.Environments :contentReference[oaicite:2]{index=2}
         var options = new InitializationOptions()
-            .SetEnvironmentName(UGS_ENV);
+            .SetEnvironmentName(UGS_ENV); // ★赤波線なら下の説明を見てね
+
+        // プロファイル分離（同一PCで複数起動する可能性に備える）
+        // ※Authの拡張が生きてるならこれが一番安全
+        options.SetProfile(profileName);
 
         await UnityServices.InitializeAsync(options);
+
         Debug.Log($"{Tag} UnityServices.InitializeAsync DONE state={UnityServices.State}");
-
-        // ★プロファイルは SignIn 前に切替（ここはあなたの方式でOK）
-        if (AuthenticationService.Instance.IsSignedIn)
-        {
-            Debug.Log($"{Tag} SignOut()");
-            AuthenticationService.Instance.SignOut();
-        }
-
-        Debug.Log($"{Tag} SwitchProfile({profileName})");
-        AuthenticationService.Instance.SwitchProfile(profileName);
 
         statusText.text = "Signing in...";
         Debug.Log($"{Tag} SignInAnonymouslyAsync START");
@@ -104,38 +96,6 @@ public class RelayConnectUI : MonoBehaviour
         ready = true;
         statusText.text = $"UGS Ready ({UGS_ENV})";
         Debug.Log($"{Tag} UGS Ready");
-    }
-
-    // ★JPリージョンIDを動的に見つける（ハードコードしない） :contentReference[oaicite:3]{index=3}
-    private async Task<string> GetJapanRegionIdOrNull()
-    {
-        try
-        {
-            var regions = await RelayService.Instance.ListRegionsAsync();
-            foreach (var r in regions)
-                Debug.Log($"{Tag} Region: id={r.Id} name={r.Name}");
-
-            var jp = regions.FirstOrDefault(r =>
-                (!string.IsNullOrEmpty(r.Name) && r.Name.IndexOf("japan", StringComparison.OrdinalIgnoreCase) >= 0) ||
-                (!string.IsNullOrEmpty(r.Id)   && r.Id.IndexOf("japan", StringComparison.OrdinalIgnoreCase) >= 0) ||
-                (!string.IsNullOrEmpty(r.Name) && r.Name.IndexOf("tokyo", StringComparison.OrdinalIgnoreCase) >= 0) ||
-                (!string.IsNullOrEmpty(r.Id)   && r.Id.IndexOf("tokyo", StringComparison.OrdinalIgnoreCase) >= 0)
-            );
-
-            if (jp == null)
-            {
-                Debug.LogWarning($"{Tag} Japan region not found. Will use default region.");
-                return null;
-            }
-
-            Debug.Log($"{Tag} Japan region selected: id={jp.Id} name={jp.Name}");
-            return jp.Id;
-        }
-        catch (Exception e)
-        {
-            Debug.LogWarning($"{Tag} ListRegionsAsync failed -> use default. {e.Message}");
-            return null;
-        }
     }
 
     public async void OnClickHost()
@@ -148,40 +108,43 @@ public class RelayConnectUI : MonoBehaviour
             await EnsureServices("Host");
 
             statusText.text = "Creating Relay allocation...";
-            string regionId = null;
-            if (pinJapanRegion)
-                regionId = await GetJapanRegionIdOrNull();
-
-            Allocation allocation;
-            if (!string.IsNullOrEmpty(regionId))
-            {
-                Debug.Log($"{Tag} CreateAllocationAsync START max={maxConnections} regionId={regionId}");
-                allocation = await RelayService.Instance.CreateAllocationAsync(maxConnections, regionId); // :contentReference[oaicite:4]{index=4}
-            }
-            else
-            {
-                Debug.Log($"{Tag} CreateAllocationAsync START max={maxConnections} region=default");
-                allocation = await RelayService.Instance.CreateAllocationAsync(maxConnections);
-            }
-
+            Debug.Log($"{Tag} CreateAllocationAsync START maxConnections={maxConnections}");
+            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxConnections);
             Debug.Log($"{Tag} CreateAllocationAsync DONE allocId={allocation.AllocationId} ipv4={allocation.RelayServer.IpV4} port={allocation.RelayServer.Port}");
 
-            string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
-            Debug.Log($"{Tag} JoinCode={joinCode}");
-            joinCodeText.text = joinCode;
-            GUIUtility.systemCopyBuffer = joinCode;
-
             var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-            if (!transport) throw new Exception("NetworkManagerにUnityTransportが付いていません");
+            if (transport == null) throw new Exception("NetworkManagerにUnityTransportが付いていません");
 
-            // ★推奨：RelayServerData を使う（引数の取り違え事故が減る）
-            var rsd = new RelayServerData(allocation, RELAY_PROTOCOL);
-            transport.SetRelayServerData(rsd);
+            // ★先にRelayへBindする（SetRelayServerData → StartHost）
+            Debug.Log($"{Tag} SetRelayServerData(host) START");
+            transport.SetRelayServerData(
+                allocation.RelayServer.IpV4,
+                (ushort)allocation.RelayServer.Port,
+                allocation.AllocationIdBytes,
+                allocation.Key,
+                allocation.ConnectionData,
+                allocation.ConnectionData,
+                true
+            );
+            Debug.Log($"{Tag} SetRelayServerData(host) DONE");
 
             statusText.text = "Starting Host...";
+            Debug.Log($"{Tag} StartHost() START");
             bool ok = NetworkManager.Singleton.StartHost();
-            Debug.Log($"{Tag} StartHost ok={ok} IsListening={NetworkManager.Singleton.IsListening} localId={NetworkManager.Singleton.LocalClientId}");
-            statusText.text = ok ? "Host started" : "Host start failed";
+            Debug.Log($"{Tag} StartHost() DONE ok={ok} IsListening={NetworkManager.Singleton.IsListening} localId={NetworkManager.Singleton.LocalClientId}");
+            if (!ok) throw new Exception("StartHost failed");
+
+            // ★ここで JoinCode を取る（順序が肝）
+            statusText.text = "Getting Join Code...";
+            Debug.Log($"{Tag} GetJoinCodeAsync START");
+            string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+            Debug.Log($"{Tag} GetJoinCodeAsync DONE joinCode={joinCode}");
+
+            joinCodeText.text = joinCode;
+            GUIUtility.systemCopyBuffer = joinCode;
+            Debug.Log($"{Tag} Copied JoinCode to clipboard");
+
+            statusText.text = "Host started (JoinCode ready)";
         }
         catch (Exception e)
         {
@@ -204,26 +167,39 @@ public class RelayConnectUI : MonoBehaviour
                 .Normalize(NormalizationForm.FormKC)
                 .ToUpperInvariant();
 
-            code = new string(code.Where(ch => (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')).ToArray());
+            code = new string(code.Where(ch =>
+                (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')
+            ).ToArray());
+
             Debug.Log($"{Tag} JoinCode raw='{raw}' normalized='{code}' len={code.Length}");
 
-            if (code.Length != 6)
-                throw new Exception("Join Code must be 6 chars (A-Z0-9)");
+            if (code.Length != 6) throw new Exception("Join Code must be 6 chars");
 
             statusText.text = "Joining Relay...";
             Debug.Log($"{Tag} JoinAllocationAsync START code={code}");
-            var joinAllocation = await RelayService.Instance.JoinAllocationAsync(code);
+            JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(code);
             Debug.Log($"{Tag} JoinAllocationAsync DONE ipv4={joinAllocation.RelayServer.IpV4} port={joinAllocation.RelayServer.Port}");
 
             var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-            if (!transport) throw new Exception("NetworkManagerにUnityTransportが付いていません");
+            if (transport == null) throw new Exception("NetworkManagerにUnityTransportが付いていません");
 
-            var rsd = new RelayServerData(joinAllocation, RELAY_PROTOCOL);
-            transport.SetRelayServerData(rsd);
+            Debug.Log($"{Tag} SetRelayServerData(client) START");
+            transport.SetRelayServerData(
+                joinAllocation.RelayServer.IpV4,
+                (ushort)joinAllocation.RelayServer.Port,
+                joinAllocation.AllocationIdBytes,
+                joinAllocation.Key,
+                joinAllocation.ConnectionData,
+                joinAllocation.HostConnectionData,
+                true
+            );
+            Debug.Log($"{Tag} SetRelayServerData(client) DONE");
 
             statusText.text = "Starting Client...";
+            Debug.Log($"{Tag} StartClient() START");
             bool ok = NetworkManager.Singleton.StartClient();
-            Debug.Log($"{Tag} StartClient ok={ok} IsListening={NetworkManager.Singleton.IsListening} localId={NetworkManager.Singleton.LocalClientId}");
+            Debug.Log($"{Tag} StartClient() DONE ok={ok} IsListening={NetworkManager.Singleton.IsListening} localId={NetworkManager.Singleton.LocalClientId}");
+
             statusText.text = ok ? "Client started" : "Client start failed";
         }
         catch (Exception e)
@@ -241,6 +217,9 @@ public class RelayConnectUI : MonoBehaviour
                 return AuthenticationService.Instance.PlayerId;
             return "not-signed-in";
         }
-        catch { return "UGS-not-initialized"; }
+        catch
+        {
+            return "UGS-not-initialized";
+        }
     }
 }
