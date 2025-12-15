@@ -950,11 +950,11 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
-  cloudProjectId: 
+  cloudProjectId: 7405acfa-abbe-4b1b-826c-3408e7be901d
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Uploading tanks
-  organizationId: 
+  projectName: tank
+  organizationId: ahao3
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
