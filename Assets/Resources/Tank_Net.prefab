@@ -5445,6 +5445,7 @@ Transform:
   m_Children:
   - {fileID: 8459198039285755698}
   - {fileID: 5366111217034779450}
+  - {fileID: 4883763873959877021}
   m_Father: {fileID: 7733015417901252984}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &3983244149600175352
@@ -10488,9 +10489,7 @@ GameObject:
   - component: {fileID: 950957544629403858}
   - component: {fileID: 8181858589717893116}
   - component: {fileID: 1956995099956626334}
-  - component: {fileID: 2377219381645054536}
   - component: {fileID: 8979960911927547632}
-  - component: {fileID: 7407515674465610258}
   - component: {fileID: 7431735062396267814}
   - component: {fileID: 7546947504065385566}
   - component: {fileID: 3354931311110357307}
@@ -10821,43 +10820,6 @@ MonoBehaviour:
     m_WeaponTag: 1
   shellNetPrefabName: Shell_Net
   mineNetPrefabName: Mine_Net
---- !u!114 &2377219381645054536
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6607345697276154869}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 184d72ea2424d1443bca885930fe844a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Shell: {fileID: 5409530, guid: 008ecb1b70bec724fa2cd34255b0d8f8, type: 3}
-  m_FireTransform: {fileID: 8459198039285755698}
-  m_AimSlider: {fileID: 2327361389277770090}
-  m_ShootingAudio: {fileID: 950957544629403858}
-  m_ChargingClip: {fileID: 8300000, guid: c17f124fcdc0f5446a72f793898bd74b, type: 3}
-  m_FireClip: {fileID: 8300000, guid: 672a9941361ad494a99fba36759eca80, type: 3}
-  m_MinLaunchForce: 5
-  m_MaxLaunchForce: 20
-  m_MaxChargeTime: 0.75
-  m_ShotCooldown: 1
-  m_MaxDamage: 80
-  m_ExplosionForce: 50
-  m_ExplosionRadius: 3
-  m_InputUser: {fileID: 0}
-  m_ShellStockData:
-    m_InitialQuantity: 10
-    m_MaxCapacity: 50
-    m_ReplenishQuantity: 10
-    m_WeaponTag: 0
-  m_MineStockData:
-    m_InitialQuantity: 0
-    m_MaxCapacity: 3
-    m_ReplenishQuantity: 1
-    m_WeaponTag: 1
-  m_Mine: {fileID: 192454, guid: 1f1d976e7b7ed994c8c37c58cd133679, type: 3}
 --- !u!114 &8979960911927547632
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10876,25 +10838,6 @@ MonoBehaviour:
   m_FullHealthColor: {r: 0, g: 1, b: 0, a: 1}
   m_ZeroHealthColor: {r: 1, g: 0, b: 0, a: 1}
   m_ExplosionPrefab: {fileID: 151086, guid: 6bc6d0dd8b8428e4ca316513f2cf13c6, type: 3}
---- !u!114 &7407515674465610258
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6607345697276154869}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 030896d0325fa3e4d8d7d4cfe2351cb2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_StartingHealth: 100
-  m_Slider: {fileID: 3171783489054325768}
-  m_FillImage: {fileID: 6209567791004007684}
-  m_FullHealthColor: {r: 0.17214417, g: 1, b: 0, a: 1}
-  m_ZeroHealthColor: {r: 1, g: 0, b: 0, a: 1}
-  m_ExplosionPrefab: {fileID: 151086, guid: 6bc6d0dd8b8428e4ca316513f2cf13c6, type: 3}
-  m_HasShield: 0
 --- !u!114 &7431735062396267814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10960,6 +10903,37 @@ MonoBehaviour:
   - {fileID: 1956995099956626334}
   - {fileID: 5297512065010678676}
   - {fileID: 1030457049809092328}
+--- !u!1 &6626526925399560971
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4883763873959877021}
+  m_Layer: 9
+  m_Name: CameraTarget
+  m_TagString: CameraTarget
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4883763873959877021
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6626526925399560971}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.38268343, z: 0, w: 0.92387956}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 819821856594718578}
+  m_LocalEulerAnglesHint: {x: 0, y: -45, z: 0}
 --- !u!1 &6630252261885503657
 GameObject:
   m_ObjectHideFlags: 0

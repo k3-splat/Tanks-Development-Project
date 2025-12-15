@@ -46,6 +46,12 @@ MonoBehaviour:
   - RpcSetLocalControl
   - RpcSetTitle
   - RpcSync
+  - RpcSetGameState
+  - RpcSyncWinsHud
+  - RpcDie
+  - RpcRequestDamage
+  - RpcRequestSetFullHealth
+  - RpcSyncHealth
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
