@@ -25,6 +25,8 @@ namespace Tanks.Complete
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
+            Debug.Log($"[TRACE] {nameof(CartridgeSpawner)} on {name}  scene={gameObject.scene.name}", this);
+
             // 初期状態ではUIを非表示
             Player1Stock.SetActive(false);
             Player2Stock.SetActive(false);

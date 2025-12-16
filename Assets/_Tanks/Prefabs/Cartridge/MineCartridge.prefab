@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1454557117684907459}
   - component: {fileID: 7567729978631496205}
   - component: {fileID: 314996934641192102}
+  - component: {fileID: 1157672670262912400}
   m_Layer: 0
   m_Name: MineCartridge
   m_TagString: MineCartridge
@@ -105,7 +106,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -153,6 +154,28 @@ MonoBehaviour:
   m_LifeTime: 15
   m_BlinkInterval: 0.2
   m_Blinklong: 3
+--- !u!114 &1157672670262912400
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262811942050609096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &3534581266574075073
 GameObject:
   m_ObjectHideFlags: 0

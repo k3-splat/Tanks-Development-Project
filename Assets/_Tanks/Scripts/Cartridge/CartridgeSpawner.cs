@@ -22,6 +22,7 @@ namespace Tanks.Complete
         private void Start()
         {
             gameManager.OnGameStateChanged += HandleGameStateChanged;
+            Debug.Log($"[TRACE] {nameof(CartridgeSpawner)} on {name}  scene={gameObject.scene.name}", this);
         }
 
         // 3. Cartridge を1つ生成するメソッド -------------
