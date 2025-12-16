@@ -132,5 +132,15 @@ namespace Tanks.Complete
                 mines  = (int)stream.ReceiveNext();
             }
         }
+
+        public void AddStockMaster(int addShells, int addMines)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            // Masterが確定 → Ownerにだけ加算を反映（UI/操作に必要なのはOwner側）
+            if (photonView.Owner != null)
+                photonView.RPC(nameof(RpcAddStock), photonView.Owner, addShells, addMines);
+        }
+
     }
 }
