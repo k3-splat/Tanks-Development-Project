@@ -92,6 +92,17 @@ namespace Tanks.Complete
             }
         }
 
+        public void LocalTakeDamage(float amount)
+        {
+            if (!photonView.IsMine) return;   // 所有者だけが依頼する（重複防止）
+            if (amount <= 0f) return;
+
+            // Master権威の既存ルートに乗せる
+            TakeDamage(amount);
+        }
+
+
+
         [PunRPC]
         private void RpcRequestSetFullHealth()
         {
@@ -121,6 +132,8 @@ namespace Tanks.Complete
 
         public void TakeDamage(float amount)
         {
+            Debug.Log($"[TakeDamage] actor={PhotonNetwork.LocalPlayer.ActorNumber} mine={photonView.IsMine} master={PhotonNetwork.IsMasterClient} amount={amount:F1}", this);
+
             if (m_Dead) return;
 
             if (PhotonNetwork.IsMasterClient)
@@ -142,6 +155,9 @@ namespace Tanks.Complete
 
         private void ApplyDamage_Master(float amount)
         {
+
+            Debug.Log($"[ApplyDamage_Master] master actor={PhotonNetwork.LocalPlayer.ActorNumber} viewID={photonView.ViewID} amount={amount:F1} hp(before)={m_CurrentHealth:F1}", this);
+
             if (m_Dead) return;
 
             m_CurrentHealth -= amount;
@@ -150,6 +166,8 @@ namespace Tanks.Complete
             {
                 m_CurrentHealth = 0f;
                 m_Dead = true;
+
+                GameManagerNet.Instance?.MasterReportTankDead(photonView.OwnerActorNr);
 
                 photonView.RPC(nameof(RpcSyncHealth), RpcTarget.All, m_CurrentHealth, true);
                 photonView.RPC(nameof(RpcDie), RpcTarget.All);
@@ -205,5 +223,14 @@ namespace Tanks.Complete
             if (_colliders != null)
                 foreach (var c in _colliders) if (c != null) c.enabled = alive;
         }
+
+        public void LocalResetFull_NoRpc()
+        {
+            m_CurrentHealth = m_StartingHealth;
+            m_Dead = false;
+            SetAliveVisual(true);
+            SetHealthUI();
+        }
+
     }
 }

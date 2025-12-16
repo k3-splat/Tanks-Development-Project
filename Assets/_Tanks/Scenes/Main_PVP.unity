@@ -1656,8 +1656,8 @@ MonoBehaviour:
     cartridgePrefab: {fileID: 0}
     spawnInterval: 0
   mineCartridgeData:
-    cartridgePrefab: {fileID: 0}
-    spawnInterval: 0
+    cartridgePrefab: {fileID: 192454, guid: 41906e2749cbcdf4aa87ce14a9fa7154, type: 3}
+    spawnInterval: 10
   spawnArea: {x: 40, y: 40}
   gameManagerNet: {fileID: 1863403582}
 --- !u!4 &914320337
@@ -2538,10 +2538,10 @@ GameObject:
   - component: {fileID: 1918689135}
   - component: {fileID: 1918689134}
   - component: {fileID: 1918689133}
-  - component: {fileID: 1918689138}
   - component: {fileID: 1918689139}
   - component: {fileID: 1918689140}
   - component: {fileID: 1918689141}
+  - component: {fileID: 1918689142}
   m_Layer: 5
   m_Name: HUDCanvas
   m_TagString: Untagged
@@ -2635,20 +2635,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &1918689138
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1918689132}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 439688fdfbf4c764ba77e85ad3a70dae, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerHpBar: {fileID: 1330394895}
-  enemyHpBar: {fileID: 1447217407}
 --- !u!114 &1918689139
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2693,6 +2679,20 @@ MonoBehaviour:
   Player2Stock: {fileID: 1173919821}
   MinimapImage: {fileID: 1617930372}
   gameManagerNet: {fileID: 1863403582}
+--- !u!114 &1918689142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1918689132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28387c03b6e54074cbfb9ef4bc0f2fea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerHpBar: {fileID: 1330394895}
+  enemyHpBar: {fileID: 1447217407}
 --- !u!1001 &2008000204
 PrefabInstance:
   m_ObjectHideFlags: 0

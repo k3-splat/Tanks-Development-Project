@@ -1,99 +1,131 @@
-using UnityEngine;
 using Photon.Pun;
+using UnityEngine;
 
 namespace Tanks.Complete
 {
-    public class ShellExplosionNet : MonoBehaviourPun
+    public class ShellExplosionNet : MonoBehaviourPun, IPunInstantiateMagicCallback
     {
-        public LayerMask m_TankMask;
-        public ParticleSystem m_ExplosionParticles;
-        public AudioSource m_ExplosionAudio;
-        public float m_MaxLifeTime = 20f;
+        [Header("Optional VFX")]
+        [SerializeField] private GameObject explosionPrefab;          // 生成するVFX（任意）
+        [SerializeField] private ParticleSystem explosionParticles;   // 直置き参照（任意：これがあるなら優先）
+        [SerializeField] private AudioSource explosionAudio;          // 任意
 
-        [HideInInspector] public float m_MaxDamage = 100f;
-        [HideInInspector] public float m_ExplosionForce = 50f;
-        [HideInInspector] public float m_ExplosionRadius = 5f;
+        [Header("Tank Mask")]
+        [SerializeField] private LayerMask tankMask = ~0;
 
-        private bool exploded;
+        private Rigidbody _rb;
 
-        void Start()
+        private float _launchForce;
+        private float _explosionForce;
+        private float _explosionRadius;
+        private float _maxDamage;
+        private float _lifeTime;
+
+        private bool _exploded;
+
+        private void Awake()
         {
+            _rb = GetComponent<Rigidbody>();
+        }
+
+        public void OnPhotonInstantiate(PhotonMessageInfo info)
+        {
+            var data = info.photonView.InstantiationData;
+            if (data != null && data.Length >= 5)
+            {
+                _launchForce     = (float)data[0];
+                _explosionForce  = (float)data[1];
+                _explosionRadius = (float)data[2];
+                _maxDamage       = (float)data[3];
+                _lifeTime        = (float)data[4];
+            }
+
+            // 全員で同じ初速をセット（必要なら PhotonRigidbodyView で安定化）
+            if (_rb != null)
+                _rb.linearVelocity = transform.forward * _launchForce;
+
+            // ★寿命で爆発の判定をするのは「オーナーだけ」
             if (photonView.IsMine)
-                Invoke(nameof(DestroyMine), m_MaxLifeTime);
+                Invoke(nameof(ExplodeOwner), _lifeTime);
         }
 
-        void DestroyMine()
+        private void OnCollisionEnter(Collision collision)
         {
-            if (this != null) PhotonNetwork.Destroy(gameObject);
+            // 当たり判定の決定は「弾の所有者だけ」
+            if (!photonView.IsMine) return;
+            ExplodeOwner();
         }
 
-        void OnTriggerEnter(Collider other)
+        private void OnTriggerEnter(Collider other)
         {
-            if (exploded) return;
-            if (!photonView.IsMine) return; // 砲弾オーナーだけ発火
+            // 使うならこっちでもOK（Collider運用の場合）
+            if (_exploded) return;
+            if (!photonView.IsMine) return;
 
-            exploded = true;
+            ExplodeOwner();
+        }
+
+        private void ExplodeOwner()
+        {
+            // ★爆発処理の実行は必ずオーナーだけ
+            if (!photonView.IsMine) return;
+            if (_exploded) return;
+            _exploded = true;
 
             Vector3 pos = transform.position;
-            photonView.RPC(nameof(RpcPlayFx), RpcTarget.All, pos);
-            photonView.RPC(nameof(RpcDamageMaster), RpcTarget.MasterClient, pos);
 
+            // 1) 全員に爆発演出
+            photonView.RPC(nameof(RpcPlayExplosion), RpcTarget.All, pos);
+
+            // 2) 影響を受ける戦車を探して「その戦車の所有者」にだけ爆風RPC
+            var hits = Physics.OverlapSphere(pos, _explosionRadius, tankMask, QueryTriggerInteraction.Ignore);
+            foreach (var h in hits)
+            {
+                var receiver = h.GetComponentInParent<TankExplosionReceiverNet>();
+                if (receiver == null) continue;
+
+                var tankPv = receiver.GetComponent<PhotonView>();
+                if (tankPv == null) continue;
+
+                tankPv.RPC(nameof(TankExplosionReceiverNet.RpcExplosionHit), tankPv.Owner,
+                    _explosionForce, pos, _explosionRadius, _maxDamage);
+            }
+
+            // 3) 弾の破棄は PhotonNetwork.Destroy（オーナーのみ）
             PhotonNetwork.Destroy(gameObject);
         }
 
-        [PunRPC] void RpcPlayFx(Vector3 pos)
+        [PunRPC]
+        private void RpcPlayExplosion(Vector3 pos)
         {
-            if (m_ExplosionParticles != null)
+            transform.position = pos;
+
+            // (A) 直参照の ParticleSystem があるならそれを使う
+            if (explosionParticles != null)
             {
-                m_ExplosionParticles.transform.parent = null;
-                m_ExplosionParticles.transform.position = pos;
-                m_ExplosionParticles.Play();
-                Destroy(m_ExplosionParticles.gameObject, m_ExplosionParticles.main.duration);
+                explosionParticles.transform.parent = null;
+                explosionParticles.transform.position = pos;
+                explosionParticles.Play();
+
+                float dur = 2f;
+                var main = explosionParticles.main;
+                dur = main.duration + main.startLifetime.constantMax;
+
+                Destroy(explosionParticles.gameObject, dur);
             }
-            if (m_ExplosionAudio != null)
+            // (B) 無いなら Prefab を生成して鳴らす
+            else if (explosionPrefab != null)
             {
-                m_ExplosionAudio.transform.position = pos;
-                m_ExplosionAudio.Play();
+                var go = Instantiate(explosionPrefab, pos, Quaternion.identity);
+                Destroy(go, 5f);
             }
 
-            // 押す力は “各戦車のオーナーだけ”
-            Collider[] cols = Physics.OverlapSphere(pos, m_ExplosionRadius, m_TankMask);
-            foreach (var c in cols)
+            if (explosionAudio != null)
             {
-                var rb = c.GetComponent<Rigidbody>();
-                if (!rb) continue;
-
-                var tankPv = rb.GetComponentInParent<PhotonView>();
-                if (tankPv != null && !tankPv.IsMine) continue;
-
-                var mov = rb.GetComponentInParent<TankMovement>();
-                if (mov != null) mov.AddExplosionForce(m_ExplosionForce, pos, m_ExplosionRadius);
+                explosionAudio.Play();
             }
-        }
 
-        [PunRPC] void RpcDamageMaster(Vector3 pos)
-        {
-            if (!PhotonNetwork.IsMasterClient) return;
-
-            Collider[] cols = Physics.OverlapSphere(pos, m_ExplosionRadius, m_TankMask);
-            foreach (var c in cols)
-            {
-                var rb = c.GetComponent<Rigidbody>();
-                if (!rb) continue;
-
-                var hp = rb.GetComponentInParent<TankHealthNet>();
-                if (!hp) continue;
-
-                float damage = CalcDamage(pos, rb.position);
-                hp.ApplyDamageMasterOnly(damage);
-            }
-        }
-
-        float CalcDamage(Vector3 explosionPos, Vector3 targetPos)
-        {
-            float dist = (targetPos - explosionPos).magnitude;
-            float rel = (m_ExplosionRadius - dist) / m_ExplosionRadius;
-            return Mathf.Max(0f, rel * m_MaxDamage);
+            // ★ここで PhotonNetwork.Destroy は絶対しない（全員が呼ぶので）
         }
     }
 }

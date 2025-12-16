@@ -14,9 +14,10 @@ GameObject:
   - component: {fileID: 5208685099892713616}
   - component: {fileID: 3325172149602826982}
   - component: {fileID: 6152518330532478406}
-  - component: {fileID: 8702202294430180629}
   - component: {fileID: 3398368436474118072}
   - component: {fileID: -4819365685343770968}
+  - component: {fileID: 1016687288694995877}
+  - component: {fileID: 5327442948205991922}
   m_Layer: 0
   m_Name: Shell_Net
   m_TagString: Untagged
@@ -208,27 +209,6 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
---- !u!114 &8702202294430180629
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3674720504506080526}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: af9894b7bced3a04c870ade3c621f94e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_TankMask:
-    serializedVersion: 2
-    m_Bits: 512
-  m_ExplosionParticles: {fileID: 6875334401822943339}
-  m_ExplosionAudio: {fileID: 4641060782965702910}
-  m_MaxLifeTime: 2
-  m_MaxDamage: 100
-  m_ExplosionForce: 1000
-  m_ExplosionRadius: 5
 --- !u!114 &3398368436474118072
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -270,10 +250,45 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 0
   observableSearch: 2
-  ObservedComponents: []
+  ObservedComponents:
+  - {fileID: 5327442948205991922}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &1016687288694995877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3674720504506080526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 918e151be9b412b49ad3deea9774078b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  explosionPrefab: {fileID: 6875334401836788141}
+  explosionParticles: {fileID: 19807510, guid: 537afde59eeba4c82897def1dccfba0a, type: 3}
+  explosionAudio: {fileID: 4641060782965702910}
+  tankMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &5327442948205991922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3674720504506080526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64179f3720bbfe947b7724caa67b7c1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SynchronizeVelocity: 1
+  m_SynchronizeAngularVelocity: 0
+  m_TeleportEnabled: 0
+  m_TeleportIfDistanceGreaterThan: 3
 --- !u!1001 &6875334401836963197
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -344,9 +359,9 @@ AudioSource:
   m_CorrespondingSourceObject: {fileID: -6988948873659476605, guid: 537afde59eeba4c82897def1dccfba0a, type: 3}
   m_PrefabInstance: {fileID: 6875334401836963197}
   m_PrefabAsset: {fileID: 0}
---- !u!198 &6875334401822943339 stripped
-ParticleSystem:
-  m_CorrespondingSourceObject: {fileID: 19807510, guid: 537afde59eeba4c82897def1dccfba0a, type: 3}
+--- !u!1 &6875334401836788141 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 195792, guid: 537afde59eeba4c82897def1dccfba0a, type: 3}
   m_PrefabInstance: {fileID: 6875334401836963197}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &6875334401837021239 stripped

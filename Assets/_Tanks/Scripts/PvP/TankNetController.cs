@@ -35,6 +35,25 @@ namespace Tanks.Complete
 
             gameObject.SetActive(true);
         }
+
+        [PunRPC]
+        public void RpcRespawnAll(Vector3 pos, Quaternion rot)
+        {
+            transform.SetPositionAndRotation(pos, rot);
+
+            // 速度も消す（吹っ飛びの残り対策）
+            var rb = GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+
+            // ★ここは「ローカル表示だけ」戻す（RPCは飛ばさない）
+            var health = GetComponent<TankHealthNet>();
+            if (health != null) health.LocalResetFull_NoRpc();
+        }
+
     }
 }
 

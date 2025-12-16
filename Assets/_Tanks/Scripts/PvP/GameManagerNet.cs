@@ -243,22 +243,19 @@ namespace Tanks.Complete
 
             for (int i = 0; i < sortedActors.Length && i < spawnPoints.Length; i++)
             {
-                if (spawnPoints[i] == null)
-                {
-                    Debug.LogError($"[GameManagerNet] spawnPoints[{i}] が null です。Inspector設定してください。");
-                    continue;
-                }
-
                 int actorNr = sortedActors[i];
                 if (!tanks.TryGetValue(actorNr, out var ctrl) || ctrl == null) continue;
 
                 var pv = ctrl.GetComponent<PhotonView>();
-                if (pv == null || pv.Owner == null) continue;
+                if (pv == null) continue;
 
                 var sp = spawnPoints[i];
-                pv.RPC(nameof(TankNetController.RpcRespawnLocal), pv.Owner, sp.position, sp.rotation);
+
+                // ★Ownerだけじゃなく All に送る
+                pv.RPC(nameof(TankNetController.RpcRespawnAll), RpcTarget.All, sp.position, sp.rotation);
             }
         }
+
 
         // TankHealthNetから「Masterだけ」呼ばれる
         public void MasterReportTankDead(int deadActorNr)
@@ -299,5 +296,24 @@ namespace Tanks.Complete
         {
             if (titleText != null) titleText.text = msg;
         }
+
+        [PunRPC]
+        public void RpcRespawnAll(Vector3 pos, Quaternion rot)
+        {
+            transform.SetPositionAndRotation(pos, rot);
+
+            // 速度も消す（吹っ飛びの残り対策）
+            var rb = GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+
+            // ★ここは「ローカル表示だけ」戻す（RPCは飛ばさない）
+            var health = GetComponent<TankHealthNet>();
+            if (health != null) health.LocalResetFull_NoRpc();
+        }
+
     }
 }

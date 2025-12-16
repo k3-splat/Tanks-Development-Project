@@ -1,163 +1,142 @@
-using System;
+using Photon.Pun;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Photon.Pun;
+using UnityEngine.UI;
 
 namespace Tanks.Complete
 {
     public class TankShootingNet : MonoBehaviourPun
     {
-        public Transform m_FireTransform;
-        public AudioSource m_ShootingAudio;
-        public AudioClip m_ChargingClip;
-        public AudioClip m_FireClip;
+        [Header("Photon Prefab Name (PhotonNetwork.Instantiate)")]
+        [SerializeField] private string shellPrefabName = "Shell_Net"; // ★PhotonのPrefab登録名
 
-        public float m_MinLaunchForce = 5f;
-        public float m_MaxLaunchForce = 20f;
-        public float m_MaxChargeTime = 0.75f;
-        public float m_ShotCooldown = 1.0f;
+        [Header("Refs")]
+        [SerializeField] private Transform fireTransform;
+        [SerializeField] private Slider aimSlider;
+        [SerializeField] private AudioSource shootingAudio;
+        [SerializeField] private AudioClip chargingClip;
+        [SerializeField] private AudioClip fireClip;
 
-        [Header("Explosion Params")]
-        public float m_MaxDamage = 100f;
-        public float m_ExplosionForce = 50f;
-        public float m_ExplosionRadius = 5f;
+        [Header("Shot")]
+        [SerializeField] private float minLaunchForce = 5f;
+        [SerializeField] private float maxLaunchForce = 20f;
+        [SerializeField] private float maxChargeTime  = 0.75f;
+        [SerializeField] private float shotCooldown   = 1.0f;
 
-        [Header("Stock")]
-        public WeaponStockData m_ShellStockData;
-        public WeaponStockData m_MineStockData;
+        [Header("Explosion Params (sent to shell)")]
+        [SerializeField] private float maxDamage      = 100f;
+        [SerializeField] private float explosionForce = 50f;
+        [SerializeField] private float explosionRadius= 5f;
+        [SerializeField] private float shellLifeTime  = 2.0f;
 
-        [Header("Net Prefab Names (Resources)")]
-        [SerializeField] private string shellNetPrefabName = "Shell_Net";
-        [SerializeField] private string mineNetPrefabName  = "Mine_Net";
+        // Input
+        private TankInputUserNet _inputUser;
+        private InputAction _fireAction;
 
-        public event Action<WeaponStockData> OnWeaponStockChanged;
-        public event Action<Vector3> OnMinePlaced;
+        private float _chargeSpeed;
+        private float _currentLaunchForce;
+        private bool _charging;
+        private float _cooldownTimer;
 
-        private TankInputUser m_InputUser;
-        private InputAction fireAction;
-        private InputAction setMineAction;
-
-        private float m_CurrentLaunchForce;
-        private float m_ChargeSpeed;
-        private bool m_Fired;
-        private bool m_IsCharging;
-        private float m_ShotCooldownTimer;
+        private bool IsLocal => photonView.IsMine;
 
         private void Awake()
         {
-            m_InputUser = GetComponent<TankInputUser>();
+            // ローカルだけInputを持つ
+            if (!IsLocal) return;
+
+            _inputUser = GetComponent<TankInputUserNet>();
+            if (_inputUser == null) _inputUser = gameObject.AddComponent<TankInputUserNet>();
         }
 
         private void Start()
         {
-            if (m_ShellStockData != null)
+            if (!IsLocal) return;
+
+            _chargeSpeed = (maxLaunchForce - minLaunchForce) / maxChargeTime;
+            _currentLaunchForce = minLaunchForce;
+
+            // Action名は君のプロジェクトと同じ "Fire" 前提
+            _fireAction = _inputUser.ActionAsset.FindAction("Fire");
+            _fireAction.Enable();
+
+            if (aimSlider != null)
             {
-                m_ShellStockData.InitializeQuantity();
-                OnWeaponStockChanged?.Invoke(m_ShellStockData);
+                aimSlider.minValue = minLaunchForce;
+                aimSlider.maxValue = maxLaunchForce;
+                aimSlider.value = minLaunchForce;
             }
-            else
-            {
-                Debug.LogError("[TankShootingNet] m_ShellStockData is NULL", this);
-            }
-
-            if (m_MineStockData != null)
-            {
-                m_MineStockData.InitializeQuantity();
-                OnWeaponStockChanged?.Invoke(m_MineStockData);
-            }
-            else
-            {
-                Debug.LogError("[TankShootingNet] m_MineStockData is NULL", this);
-            }
-
-
-            m_ShellStockData.InitializeQuantity();
-            m_MineStockData.InitializeQuantity();
-            OnWeaponStockChanged?.Invoke(m_ShellStockData);
-            OnWeaponStockChanged?.Invoke(m_MineStockData);
-
-            fireAction = m_InputUser.ActionAsset.FindAction("Fire");
-            setMineAction = m_InputUser.ActionAsset.FindAction("SetMine");
-            fireAction.Enable();
-            setMineAction.Enable();
-
-            m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
-            m_CurrentLaunchForce = m_MinLaunchForce;
         }
 
         private void Update()
         {
-            if (!photonView.IsMine) return; // 自機だけ操作
+            if (!IsLocal) return;
 
-            if (m_ShotCooldownTimer > 0f) m_ShotCooldownTimer -= Time.deltaTime;
+            if (_cooldownTimer > 0f) _cooldownTimer -= Time.deltaTime;
 
-            if (m_ShotCooldownTimer <= 0f && fireAction.WasPressedThisFrame() && m_ShellStockData.GetCurrentQuantity() > 0)
+            // UI更新
+            if (aimSlider != null) aimSlider.value = _currentLaunchForce;
+
+            // 1) 押し始め：チャージ開始
+            if (_cooldownTimer <= 0f && _fireAction.WasPressedThisFrame())
             {
-                m_Fired = false;
-                m_IsCharging = true;
-                m_CurrentLaunchForce = m_MinLaunchForce;
-                m_ShootingAudio.clip = m_ChargingClip;
-                m_ShootingAudio.Play();
+                _charging = true;
+                _currentLaunchForce = minLaunchForce;
+
+                if (shootingAudio != null && chargingClip != null)
+                {
+                    shootingAudio.clip = chargingClip;
+                    shootingAudio.Play();
+                }
             }
 
-            if (m_IsCharging && !m_Fired && fireAction.IsPressed())
+            // 2) 押しっぱ：チャージ増加
+            if (_charging && _fireAction.IsPressed())
             {
-                m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
-                if (m_CurrentLaunchForce >= m_MaxLaunchForce)
-                    m_CurrentLaunchForce = m_MaxLaunchForce;
+                _currentLaunchForce += _chargeSpeed * Time.deltaTime;
+                if (_currentLaunchForce >= maxLaunchForce)
+                    _currentLaunchForce = maxLaunchForce;
             }
 
-            if (m_IsCharging && !m_Fired && fireAction.WasReleasedThisFrame())
+            // 3) 離した：発射
+            if (_charging && _fireAction.WasReleasedThisFrame())
             {
-                FireNet();
-                m_IsCharging = false;
-            }
-
-            if (setMineAction.WasPressedThisFrame())
-            {
-                PlaceMineNet();
+                FireNet(_currentLaunchForce);
+                _charging = false;
+                _currentLaunchForce = minLaunchForce;
             }
         }
 
-        private void FireNet()
+        private void FireNet(float launchForce)
         {
-            m_Fired = true;
+            if (fireTransform == null) return;
 
-            m_ShellStockData.Use();
-            OnWeaponStockChanged?.Invoke(m_ShellStockData);
-
-            // ネット生成
-            GameObject go = PhotonNetwork.Instantiate(shellNetPrefabName, m_FireTransform.position, m_FireTransform.rotation);
-
-            var rb = go.GetComponent<Rigidbody>();
-            if (rb != null)
-                rb.linearVelocity = m_CurrentLaunchForce * m_FireTransform.forward;
-
-            // 爆発パラメータをShell側へ渡す（簡易：直接セット）
-            var exp = go.GetComponent<ShellExplosionNet>();
-            if (exp != null)
+            // 弾の初期条件を InstantiateData で渡す（全員同じ値を受け取れる）
+            object[] data = new object[]
             {
-                exp.m_MaxDamage = m_MaxDamage;
-                exp.m_ExplosionForce = m_ExplosionForce;
-                exp.m_ExplosionRadius = m_ExplosionRadius;
+                launchForce,
+                explosionForce,
+                explosionRadius,
+                maxDamage,
+                shellLifeTime
+            };
+
+            PhotonNetwork.Instantiate(
+                shellPrefabName,
+                fireTransform.position,
+                fireTransform.rotation,
+                0,
+                data
+            );
+
+            if (shootingAudio != null && fireClip != null)
+            {
+                shootingAudio.Stop();
+                shootingAudio.clip = fireClip;
+                shootingAudio.Play();
             }
 
-            m_ShootingAudio.clip = m_FireClip;
-            m_ShootingAudio.Play();
-
-            m_CurrentLaunchForce = m_MinLaunchForce;
-            m_ShotCooldownTimer = m_ShotCooldown;
-        }
-
-        private void PlaceMineNet()
-        {
-            if (m_MineStockData.GetCurrentQuantity() <= 0) return;
-
-            PhotonNetwork.Instantiate(mineNetPrefabName, transform.position - transform.forward * 2f, transform.rotation);
-
-            m_MineStockData.Use();
-            OnWeaponStockChanged?.Invoke(m_MineStockData);
-            OnMinePlaced?.Invoke(transform.position);
+            _cooldownTimer = shotCooldown;
         }
     }
 }
