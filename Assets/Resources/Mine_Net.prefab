@@ -16,6 +16,8 @@ GameObject:
   - component: {fileID: 11426614}
   - component: {fileID: -927890215427519120}
   - component: {fileID: -2445045711175834287}
+  - component: {fileID: 2350740815903032637}
+  - component: {fileID: 7536838274608593444}
   m_Layer: 0
   m_Name: Mine_Net
   m_TagString: Mine
@@ -244,10 +246,49 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 0
   observableSearch: 2
-  ObservedComponents: []
+  ObservedComponents:
+  - {fileID: 2350740815903032637}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &2350740815903032637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 192454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SynchronizePosition: 1
+  m_SynchronizeRotation: 1
+  m_SynchronizeScale: 0
+  m_UseLocal: 1
+--- !u!114 &7536838274608593444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 192454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7c5b89ad0a289b44a54eb51728559b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  explosionForce: 800
+  explosionRadius: 6
+  maxDamage: 100
+  tankMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  skullWorld: {fileID: 2209740222830815603}
+  skullMinimap: {fileID: 9077685814680542781}
+  explosionPrefab: {fileID: 6950372259491063372}
+  explosionAudio: {fileID: 9184786572633591583}
 --- !u!1 &2209740222830815603
 GameObject:
   m_ObjectHideFlags: 0
@@ -530,6 +571,11 @@ PrefabInstance:
 --- !u!198 &6950372259472959370 stripped
 ParticleSystem:
   m_CorrespondingSourceObject: {fileID: 19807510, guid: 537afde59eeba4c82897def1dccfba0a, type: 3}
+  m_PrefabInstance: {fileID: 6950372259491175068}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6950372259491063372 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 195792, guid: 537afde59eeba4c82897def1dccfba0a, type: 3}
   m_PrefabInstance: {fileID: 6950372259491175068}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &6950372259491231702 stripped

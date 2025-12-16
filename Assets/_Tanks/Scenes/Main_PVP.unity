@@ -1653,11 +1653,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   shellCartridgeData:
-    cartridgePrefab: {fileID: 0}
-    spawnInterval: 0
+    cartridgePrefab: {fileID: 262811942050609096, guid: 00436ad283b6caa47bf7b261859e2b2d, type: 3}
+    spawnInterval: 5
   mineCartridgeData:
-    cartridgePrefab: {fileID: 192454, guid: 41906e2749cbcdf4aa87ce14a9fa7154, type: 3}
-    spawnInterval: 10
+    cartridgePrefab: {fileID: 262811942050609096, guid: 36649f20ae561414eb37ec0d78ba4d1e, type: 3}
+    spawnInterval: 5
   spawnArea: {x: 40, y: 40}
   gameManagerNet: {fileID: 1863403582}
 --- !u!4 &914320337

@@ -10462,6 +10462,7 @@ GameObject:
   - component: {fileID: 4902371938256438762}
   - component: {fileID: 3089444467554398531}
   - component: {fileID: 4046412170097722586}
+  - component: {fileID: 5176752391134755991}
   m_Layer: 9
   m_Name: Tank_Net
   m_TagString: Untagged
@@ -10917,6 +10918,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d02ad9f270eb694438d0f75161df8b5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &5176752391134755991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6607345697276154869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6642edebde4aae4faaeafa4dbe80b86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shells: 10
+  mines: 1
+  maxShells: 30
+  maxMines: 10
 --- !u!1 &6626526925399560971
 GameObject:
   m_ObjectHideFlags: 0

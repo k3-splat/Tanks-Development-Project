@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 7567729978631496205}
   - component: {fileID: 314996934641192102}
   - component: {fileID: 1804046982188661444}
+  - component: {fileID: -4196739861468430136}
   m_Layer: 0
   m_Name: ShellCartridge
   m_TagString: ShellCartridge
@@ -176,6 +177,21 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &-4196739861468430136
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262811942050609096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09557d42fade26b47a35550c08cbcd64, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  addShells: 1
+  addMines: 0
+  validateRadius: 3
 --- !u!1 &1463691125666879901
 GameObject:
   m_ObjectHideFlags: 0
